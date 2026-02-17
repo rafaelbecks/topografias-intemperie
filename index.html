@@ -12,18 +12,18 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "/node_modules/three/build/three.module.js",
-    "tweakpane": "/node_modules/tweakpane/dist/tweakpane.min.js"
+    "three": "https://esm.sh/three@0.182.0",
+    "three/addons/": "https://esm.sh/three@0.182.0/addons/",
+    "tweakpane": "https://esm.sh/tweakpane@4.0.5"
   }
 }
 </script>
 
 <script type="module">
 import * as THREE from "three";
-import { OrbitControls } from "/node_modules/three/examples/jsm/controls/OrbitControls.js";
-import { GLTFLoader } from "/node_modules/three/examples/jsm/loaders/GLTFLoader.js";
-import { RGBELoader } from "/node_modules/three/examples/jsm/loaders/RGBELoader.js";
-import { PMREMGenerator } from "/node_modules/three/src/extras/PMREMGenerator.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { Pane } from "tweakpane";
 
 const scene = new THREE.Scene();
@@ -47,7 +47,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 // ENVIRONMENT MAPS
-const pmrem = new PMREMGenerator(renderer);
+const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
 
 const rgbeLoader = new RGBELoader();

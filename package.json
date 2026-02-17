@@ -4,8 +4,7 @@
   "description": "Scripting and viewer testing tools for 3d suminagashi experiment",
   "type": "module",
   "scripts": {
-    "serve": "serve .",
-    "extrude": "node proximityExtrude.js"
+    "serve": "serve ."
   },
   "author": "Rafael Becerra",
   "license": "MIT",
