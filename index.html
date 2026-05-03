@@ -78,6 +78,19 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 renderer.setPixelRatio(window.devicePixelRatio);
 
+const params = {
+  lightIntensity: 2.8,
+  ambient: 1.52,
+  exposure: 1,
+  roughness: 1,
+  environment: "mpumalanga",
+  bgBlur: 0,
+  moveSpeed: 5,
+  fpMove: true,
+  autoRotate: false,
+  rotateSpeed: 0.6
+};
+
 // ENVIRONMENT MAPS
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
@@ -99,7 +112,7 @@ function loadEnvironment(path) {
     if (currentEnvMap) currentEnvMap.dispose();
     currentEnvMap = envMap;
     light.intensity = 0;
-    ambient.light = 0;
+    ambient.intensity = 0;
     hdr.dispose();
   });
 }
@@ -109,10 +122,8 @@ document.body.appendChild(renderer.domElement);
 // CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-
-// auto rotate
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.6;
+controls.autoRotate = params.autoRotate;
+controls.autoRotateSpeed = params.rotateSpeed;
 
 controls.addEventListener("start", () => {
   controls.autoRotate = false;
@@ -121,6 +132,55 @@ controls.addEventListener("start", () => {
 controls.addEventListener("end", () => {
   if (params.autoRotate) controls.autoRotate = true;
 });
+
+const clock = new THREE.Clock();
+const moveState = { forward: false, backward: false, left: false, right: false };
+const walkForward = new THREE.Vector3();
+const walkRight = new THREE.Vector3();
+const walkDelta = new THREE.Vector3();
+
+function onKeyDown(e) {
+  if (e.repeat) return;
+  switch (e.code) {
+    case "KeyW": moveState.forward = true; break;
+    case "KeyS": moveState.backward = true; break;
+    case "KeyA": moveState.left = true; break;
+    case "KeyD": moveState.right = true; break;
+    default: break;
+  }
+}
+
+function onKeyUp(e) {
+  switch (e.code) {
+    case "KeyW": moveState.forward = false; break;
+    case "KeyS": moveState.backward = false; break;
+    case "KeyA": moveState.left = false; break;
+    case "KeyD": moveState.right = false; break;
+    default: break;
+  }
+}
+
+window.addEventListener("keydown", onKeyDown);
+window.addEventListener("keyup", onKeyUp);
+
+function applyWalkMovement(delta) {
+  if (!params.fpMove) return;
+  const speed = params.moveSpeed * delta;
+  camera.getWorldDirection(walkForward);
+  walkForward.y = 0;
+  if (walkForward.lengthSq() <= 1e-8) return;
+  walkForward.normalize();
+  walkRight.crossVectors(walkForward, camera.up).normalize();
+
+  walkDelta.set(0, 0, 0);
+  if (moveState.forward) walkDelta.addScaledVector(walkForward, speed);
+  if (moveState.backward) walkDelta.addScaledVector(walkForward, -speed);
+  if (moveState.right) walkDelta.addScaledVector(walkRight, speed);
+  if (moveState.left) walkDelta.addScaledVector(walkRight, -speed);
+  if (walkDelta.lengthSq() === 0) return;
+  camera.position.add(walkDelta);
+  controls.target.add(walkDelta);
+}
 
 // LIGHTS
 const light = new THREE.DirectionalLight(0xffffff, 0);
@@ -217,19 +277,7 @@ function disposeModel(object) {
 
 
 loadModel("cart2");
-loadEnvironment("./env/belfast.hdr")
-
-// TWEAKPANE
-const params = {
-  lightIntensity: 2.8,
-  ambient: 1.52,
-  exposure: 1,
-  roughness: 1,
-  environment: "none",
-  bgBlur: 0,
-  autoRotate: true,
-  rotateSpeed: 0.6
-};
+loadEnvironment("./env/mpumalanga.hdr");
 
 const pane = new Pane({ title: "Scene Controls" });
 
@@ -253,7 +301,8 @@ pane.addBlade({
     { text: "Macizo flotante de amatista", value: "cart11" },
     { text: "El río que arde entre dos cráteres", value: "cart13" },
     { text: "La quebrada de ocre profundo", value: "cart14" },
-    { text: "Macizo del pez erosionado", value: "cart15" }
+    { text: "Macizo del pez erosionado", value: "cart15" },
+    { text: "Organic model", value: "organic_model" }
 
   ],
   value: "cart2"
@@ -275,9 +324,9 @@ pane.addBinding(params, "exposure", { min:0.1, max:3 }).on("change", e => {
 });
 
 pane.addBinding(params, "roughness", { min:0, max:1 }).on("change", e => {
-  if (!model) return;
-  model.traverse(o=>{
-    if(o.isMesh && o.material.roughness !== undefined){
+  if (!currentModel) return;
+  currentModel.traverse(o => {
+    if (o.isMesh && o.material && o.material.roughness !== undefined) {
       o.material.roughness = e.value;
     }
   });
@@ -286,33 +335,43 @@ pane.addBinding(params, "roughness", { min:0, max:1 }).on("change", e => {
 pane.addBinding(params, "environment", {
   options: {
     Belfast: 'belfast',
-    Firesky: 'firesky',
     Mpumalanga: 'mpumalanga',
     Orchard: 'orchard',
     Snow: "snow",
     Lenong: "lenong",
     Green: "green",
     Park: "park",
-    Sahara: "sahara",
-    Stars: "stars",
-    None: "none"
   }
 }).on("change", e => {
-
-  loadEnvironment(`./env/${e.value}.hdr`);
-
   if (e.value === "none") {
     scene.environment = null;
     scene.background = new THREE.Color(0x111111);
     light.intensity = params.lightIntensity;
     ambient.intensity = params.ambient;
+  } else {
+    loadEnvironment(`./env/${e.value}.hdr`);
   }
-
 });
 
 pane.addBinding(params, "bgBlur", { min: 0, max: 1, step: 0.01 })
 .on("change", e => {
   scene.backgroundBlurriness = e.value;
+});
+
+pane.addBinding(params, "fpMove", { label: "First person" }).on("change", e => {
+  if (!e.value) {
+    moveState.forward = false;
+    moveState.backward = false;
+    moveState.left = false;
+    moveState.right = false;
+  }
+});
+
+pane.addBinding(params, "moveSpeed", {
+  label: "move speed",
+  min: 1,
+  max: 100,
+  step: 1
 });
 
 pane.addBinding(params, "autoRotate").on("change", e => {
@@ -330,6 +389,7 @@ pane.addBinding(params, "rotateSpeed", {
 // LOOP
 function animate() {
   requestAnimationFrame(animate);
+  applyWalkMovement(clock.getDelta());
   controls.update();
   renderer.render(scene, camera);
 }
