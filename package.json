@@ -4,7 +4,7 @@
   "description": "Scripting and viewer testing tools for 3d suminagashi experiment",
   "type": "module",
   "scripts": {
-    "serve": "serve ."
+    "start": "serve . -p 9989"
   },
   "author": "Rafael Becerra",
   "license": "MIT",

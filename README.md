@@ -24,23 +24,7 @@ Three.js viewer for exported GLB models.
 
 ```bash path=null start=null
 npm install
-npm run serve
-```
-
-**Controls:**
-- Model selection
-- HDR environment maps
-- Lighting and exposure
-- Auto-rotation
-
-## Structure
-
-```
-├── extrude_curves.py   # Blender script
-├── index.html          # Three.js viewer
-├── svg/                # Source vector files
-├── glb/                # Exported models
-└── env/                # HDR environment maps
+npm run start
 ```
 
 ## Author
