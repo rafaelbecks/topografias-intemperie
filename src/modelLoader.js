@@ -36,7 +36,7 @@ function applyWireframe(model, enabled) {
   });
 }
 
-export function createModelLoader({ scene, camera, controls, onModelLoaded }) {
+export function createModelLoader({ scene, camera, controls, onModelLoaded, loading }) {
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath(
     "https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
@@ -46,7 +46,7 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded }) {
   loader.setDRACOLoader(dracoLoader);
 
   let currentModel = null;
-  let loading = false;
+  let loadId = 0;
   let introAnimation = null;
 
   function frameCamera(size) {
@@ -78,49 +78,64 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded }) {
     };
   }
 
-  function loadModel(name) {
-    if (loading) return;
-    loading = true;
+  function loadModel(name, { silent = false } = {}) {
+    const id = ++loadId;
 
-    loader.load(
-      `./glb/${name}.glb`,
-      (gltf) => {
-        if (currentModel) {
-          scene.remove(currentModel);
-          disposeModel(currentModel);
-          currentModel = null;
-        }
+    return new Promise((resolve, reject) => {
+      if (!silent) loading?.begin("model");
 
-        const model = gltf.scene;
-        currentModel = model;
-        scene.add(model);
-
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        model.position.sub(center);
-
-        model.traverse((o) => {
-          if (o.isMesh && o.material) {
-            o.material.envMapIntensity = 1.0;
-            o.material.needsUpdate = true;
+      loader.load(
+        `./glb/${name}.glb`,
+        (gltf) => {
+          if (id !== loadId) {
+            if (!silent) loading?.end("model");
+            resolve(null);
+            return;
           }
-        });
 
-        applyWireframe(model, params.wireframe);
-        onModelLoaded?.(model);
-        const framedY = frameCamera(size);
-        startIntroAnimation(framedY);
-        loading = false;
-      },
-      undefined,
-      (err) => {
-        console.error(err);
-        loading = false;
-      }
-    );
+          if (currentModel) {
+            scene.remove(currentModel);
+            disposeModel(currentModel);
+            currentModel = null;
+          }
+
+          const model = gltf.scene;
+          currentModel = model;
+          scene.add(model);
+
+          const box = new THREE.Box3().setFromObject(model);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          model.position.sub(center);
+
+          model.traverse((o) => {
+            if (o.isMesh && o.material) {
+              o.material.envMapIntensity = 1.0;
+              o.material.needsUpdate = true;
+            }
+          });
+
+          applyWireframe(model, params.wireframe);
+          onModelLoaded?.(model);
+          const framedY = frameCamera(size);
+          startIntroAnimation(framedY);
+
+          if (!silent) loading?.end("model");
+          resolve(model);
+        },
+        (xhr) => {
+          if (!silent && xhr.total) {
+            loading?.setProgress(xhr.loaded / xhr.total);
+          }
+        },
+        (err) => {
+          if (id === loadId && !silent) loading?.end("model");
+          console.error(err);
+          reject(err);
+        }
+      );
+    });
   }
-
 
   function updateIntro() {
     if (!introAnimation) return;

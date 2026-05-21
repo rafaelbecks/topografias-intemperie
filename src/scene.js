@@ -4,7 +4,7 @@ import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { params } from "./config.js";
 
-export function createSceneSystem() {
+export function createSceneSystem({ loading } = {}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
 
@@ -67,9 +67,41 @@ export function createSceneSystem() {
     texture.dispose();
   }
 
-  function loadEnvironment(path, format = "hdr") {
+  let envLoadId = 0;
+
+  function loadEnvironment(path, format = "hdr", { silent = false } = {}) {
+    if (!path) return Promise.resolve();
+
+    const id = ++envLoadId;
     const loader = format === "exr" ? exrLoader : rgbeLoader;
-    loader.load(path, applyEnvironmentTexture);
+
+    return new Promise((resolve, reject) => {
+      if (!silent) loading?.begin("environment");
+
+      loader.load(
+        path,
+        (texture) => {
+          if (id !== envLoadId) {
+            if (!silent) loading?.end("environment");
+            resolve(null);
+            return;
+          }
+          applyEnvironmentTexture(texture);
+          if (!silent) loading?.end("environment");
+          resolve(texture);
+        },
+        (xhr) => {
+          if (!silent && xhr.total) {
+            loading?.setProgress(xhr.loaded / xhr.total);
+          }
+        },
+        (err) => {
+          if (id === envLoadId && !silent) loading?.end("environment");
+          console.error(err);
+          reject(err);
+        }
+      );
+    });
   }
 
   function clearEnvironment() {

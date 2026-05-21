@@ -89,7 +89,7 @@ export function captureState({ scene, camera, controls }) {
   };
 }
 
-export function applyState(state, ctx) {
+export async function applyState(state, ctx, { silent = false } = {}) {
   if (!state || !SUPPORTED_VERSIONS.includes(state.version)) {
     throw new Error(
       `Unsupported state version (expected ${SUPPORTED_VERSIONS.join(" or ")})`
@@ -141,8 +141,12 @@ export function applyState(state, ctx) {
 
   ctx.ui.refresh();
   ctx.grainOverlay?.sync();
-  ctx.loadModel(params.model);
-  ctx.reloadEnvironment();
+
+  const loadOpts = { silent };
+  await Promise.all([
+    ctx.loadModel(params.model, loadOpts),
+    ctx.reloadEnvironment(loadOpts),
+  ]);
 
   document.getElementById("position").style.display = params.debug ? "block" : "none";
 }
@@ -152,13 +156,25 @@ export function downloadState(state) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `cartografias-state-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.json`;
+  a.download = `memory-${memoryTimestamp()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
 export async function loadStateFromFile(file, ctx) {
-  const text = await file.text();
-  const state = JSON.parse(text);
-  applyState(state, ctx);
+  const loading = ctx.loading;
+
+  await loading?.run("memory", async ({ setProgress }) => {
+    setProgress(0.1);
+    const text = await file.text();
+    setProgress(0.45);
+    const state = JSON.parse(text);
+    setProgress(0.55);
+    await applyState(state, ctx, { silent: true });
+    setProgress(1);
+  });
+}
+
+function memoryTimestamp() {
+  return new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
 }

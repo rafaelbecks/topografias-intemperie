@@ -6,8 +6,11 @@ import { createInputSystem } from "./input.js";
 import { createUI } from "./ui.js";
 import { createTerrainAnimation } from "./terrain/terrainAnimation.js";
 import { createGrainOverlay } from "./grain/grainOverlay.js";
+import { createLoading } from "./ui/loading.js";
 
-const sceneSystem = createSceneSystem();
+const loading = createLoading();
+
+const sceneSystem = createSceneSystem({ loading });
 const { scene, camera, renderer, controls, light, ambient, loadEnvironment, clearEnvironment } =
   sceneSystem;
 
@@ -18,6 +21,7 @@ const modelLoader = createModelLoader({
   scene,
   camera,
   controls,
+  loading,
   onModelLoaded: (model) => terrainAnimation.bindModel(model),
 });
 const input = createInputSystem(camera, controls);
@@ -36,6 +40,7 @@ const ui = createUI({
   input,
   terrainAnimation,
   grainOverlay,
+  loading,
 });
 
 const posEl = document.getElementById("position");
@@ -58,6 +63,9 @@ function animate() {
     `target x: ${t.x.toFixed(2)} &nbsp; y: ${t.y.toFixed(2)} &nbsp; z: ${t.z.toFixed(2)}`;
 }
 
-modelLoader.loadModel(params.model);
-ui.reloadEnvironment();
+Promise.all([
+  modelLoader.loadModel(params.model),
+  ui.reloadEnvironment(),
+]).catch(console.error);
+
 animate();

@@ -57,7 +57,9 @@ After conversion, restart the viewer and pick **env type → EXR** in Tweakpane 
 
 #### Scene state
 
-In the viewer, use **State → Export JSON** / **Load JSON** (above the Scene/Animation tabs) to save and restore scene settings (model, lighting, environment, camera, terrain animation, grain overlay, etc.).
+In the viewer, use **State → Export JSON** / **Load JSON** (above the Scene/Animation tabs) to save and restore scene settings (model, lighting, environment, camera, terrain animation, grain overlay, etc.). Exports are named `memory-{timestamp}.json`.
+
+**Shortcuts:** `Ctrl+I` (or `Cmd+I` on macOS) toggles the controls panel.
 
 **Grain overlay** uses [grained.js](https://github.com/sarathsaleem/grained) (MIT) — enable it in the **Grain overlay** folder at the bottom of the controls panel.
 
