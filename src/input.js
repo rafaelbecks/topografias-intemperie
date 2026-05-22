@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { params } from "./config.js";
 
 export function createInputSystem(camera, controls) {
+  let walkEnabled = true;
   const moveState = { forward: false, backward: false, left: false, right: false };
   const walkForward = new THREE.Vector3();
   const walkRight = new THREE.Vector3();
@@ -38,8 +39,13 @@ export function createInputSystem(camera, controls) {
     moveState.right = false;
   }
 
+  function setWalkEnabled(enabled) {
+    walkEnabled = enabled;
+    if (!enabled) resetMoveState();
+  }
+
   function applyWalkMovement(delta) {
-    if (!params.fpMove) return;
+    if (!params.fpMove || !walkEnabled) return;
     const speed = params.moveSpeed * delta;
     camera.getWorldDirection(walkForward);
     walkForward.y = 0;
@@ -57,5 +63,5 @@ export function createInputSystem(camera, controls) {
     controls.target.add(walkDelta);
   }
 
-  return { applyWalkMovement, resetMoveState };
+  return { applyWalkMovement, resetMoveState, setWalkEnabled };
 }

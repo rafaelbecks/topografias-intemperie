@@ -7,24 +7,44 @@ import { createUI } from "./ui.js";
 import { createTerrainAnimation } from "./terrain/terrainAnimation.js";
 import { createGrainOverlay } from "./grain/grainOverlay.js";
 import { createLoading } from "./ui/loading.js";
+import { createSensorClient } from "./sensor/sensorClient.js";
+import { createSensorController } from "./sensor/sensorController.js";
+import { sensorParams } from "./sensor/sensorConfig.js";
 
 const loading = createLoading();
 
 const sceneSystem = createSceneSystem({ loading });
+
 const { scene, camera, renderer, controls, light, ambient, loadEnvironment, clearEnvironment } =
   sceneSystem;
 
 const terrainAnimation = createTerrainAnimation();
 const grainOverlay = createGrainOverlay();
+const input = createInputSystem(camera, controls);
 
+const sensorClient = createSensorClient({
+  onState: (state) => sensorController.handleState(state),
+});
+
+let sensorController;
 const modelLoader = createModelLoader({
   scene,
   camera,
   controls,
   loading,
-  onModelLoaded: (model) => terrainAnimation.bindModel(model),
+  onModelLoaded: (model) => {
+    terrainAnimation.bindModel(model);
+    if (sensorParams.enabled) {
+      sensorController.calibrate(sensorClient.getState());
+    }
+  },
 });
-const input = createInputSystem(camera, controls);
+
+sensorController = createSensorController({
+  getModel: () => modelLoader.getCurrentModel(),
+  controls,
+  input,
+});
 
 const ui = createUI({
   loadModel: modelLoader.loadModel,
@@ -41,6 +61,8 @@ const ui = createUI({
   terrainAnimation,
   grainOverlay,
   loading,
+  sensorClient,
+  sensorController,
 });
 
 const posEl = document.getElementById("position");
@@ -50,7 +72,9 @@ const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
-  input.applyWalkMovement(clock.getDelta());
+  const delta = clock.getDelta();
+  input.applyWalkMovement(delta);
+  sensorController.update(delta);
   terrainAnimation.update(clock.getElapsedTime());
   modelLoader.updateIntro();
   controls.update();

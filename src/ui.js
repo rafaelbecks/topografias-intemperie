@@ -5,6 +5,7 @@ import { setupAnimationUI } from "./terrain/animationUI.js";
 import { setupGrainUI } from "./grain/grainUI.js";
 import { setupSceneTabUI } from "./ui/sceneTabUI.js";
 import { setupPaneToggle } from "./ui/paneToggle.js";
+import { setupSensorUI } from "./ui/sensorUI.js";
 
 export function createUI(ctx) {
   const { loadModel, loadEnvironment, scene, camera, controls, terrainAnimation, grainOverlay } =
@@ -74,5 +75,15 @@ export function createUI(ctx) {
   setupAnimationUI(animationPage, terrainAnimation, pane);
   setupGrainUI(pane, grainOverlay);
 
-  return { pane, refresh, reloadEnvironment };
+  const sensorUI = setupSensorUI(pane, {
+    sensorClient: ctx.sensorClient,
+    sensorController: ctx.sensorController,
+    modelLoader: ctx.modelLoader,
+  });
+
+  if (ctx.sensorClient) {
+    ctx.sensorClient.onStatus = sensorUI.onStatus;
+  }
+
+  return { pane, refresh, reloadEnvironment, sensorUI };
 }
