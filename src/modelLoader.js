@@ -173,11 +173,18 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
     });
   }
 
+  function getModelBounds() {
+    if (!currentModel) return null;
+    const box = new THREE.Box3().setFromObject(currentModel);
+    return { size: box.getSize(new THREE.Vector3()), center: box.getCenter(new THREE.Vector3()) };
+  }
+
   return {
     loadModel,
     updateIntro,
     setWireframe,
     setRoughness,
     getCurrentModel: () => currentModel,
+    getModelBounds,
   };
 }

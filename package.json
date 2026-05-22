@@ -6,7 +6,8 @@
   "scripts": {
     "start": "serve . -p 9989",
     "convert:env": "bash scripts/convert-env-jpg.sh",
-    "generate:exr": "node scripts/generate-exr-config.mjs"
+    "generate:exr": "node scripts/generate-exr-config.mjs",
+    "vendor:text": "node scripts/vendor-text-deps.mjs"
   },
   "author": "Rafael Becerra",
   "license": "MIT",
@@ -16,7 +17,9 @@
     "@gltf-transform/functions": "^4.3.0",
     "three": "^0.182.0",
     "three-stdlib": "^2.36.1",
-    "tweakpane": "^4.0.5"
+    "three-text": "^0.6.2",
+    "tweakpane": "^4.0.5",
+    "woff-lib": "^0.0.3"
   },
   "devDependencies": {
     "serve": "^14.2.1"

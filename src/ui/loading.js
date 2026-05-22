@@ -2,6 +2,7 @@ const LABELS = {
   model: "Loading model",
   environment: "Loading environment",
   memory: "Loading memory",
+  text: "Rendering text",
 };
 
 /**

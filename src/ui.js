@@ -6,6 +6,7 @@ import { setupGrainUI } from "./grain/grainUI.js";
 import { setupSceneTabUI } from "./ui/sceneTabUI.js";
 import { setupPaneToggle } from "./ui/paneToggle.js";
 import { setupSensorUI } from "./ui/sensorUI.js";
+import { setupTextUI } from "./text/textUI.js";
 
 export function createUI(ctx) {
   const { loadModel, loadEnvironment, scene, camera, controls, terrainAnimation, grainOverlay } =
@@ -57,11 +58,12 @@ export function createUI(ctx) {
   });
 
   const tab = pane.addTab({
-    pages: [{ title: "Scene" }, { title: "Animation" }],
+    pages: [{ title: "Scene" }, { title: "Animation" }, { title: "Text" }],
   });
 
   const scenePage = tab.pages[0];
   const animationPage = tab.pages[1];
+  const textPage = tab.pages[2];
 
   const sceneTab = setupSceneTabUI(scenePage, ctx);
 
@@ -74,6 +76,10 @@ export function createUI(ctx) {
 
   setupAnimationUI(animationPage, terrainAnimation, pane);
   setupGrainUI(pane, grainOverlay);
+
+  if (ctx.textOverlay) {
+    setupTextUI(textPage, ctx.textOverlay);
+  }
 
   const sensorUI = setupSensorUI(pane, {
     sensorClient: ctx.sensorClient,

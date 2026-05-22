@@ -10,6 +10,8 @@ import { createLoading } from "./ui/loading.js";
 import { createSensorClient } from "./sensor/sensorClient.js";
 import { createSensorController } from "./sensor/sensorController.js";
 import { sensorParams } from "./sensor/sensorConfig.js";
+import { createTextOverlay } from "./text/textOverlay.js";
+import { textParams } from "./text/textParams.js";
 
 const loading = createLoading();
 
@@ -34,6 +36,7 @@ const modelLoader = createModelLoader({
   loading,
   onModelLoaded: (model) => {
     terrainAnimation.bindModel(model);
+    textOverlay.syncTransform();
     if (sensorParams.enabled) {
       sensorController.calibrate(sensorClient.getState());
     }
@@ -44,6 +47,12 @@ sensorController = createSensorController({
   getModel: () => modelLoader.getCurrentModel(),
   controls,
   input,
+});
+
+const textOverlay = createTextOverlay({
+  scene,
+  loading,
+  getModelBounds: () => modelLoader.getModelBounds(),
 });
 
 const ui = createUI({
@@ -63,6 +72,7 @@ const ui = createUI({
   loading,
   sensorClient,
   sensorController,
+  textOverlay,
 });
 
 const posEl = document.getElementById("position");
@@ -76,6 +86,7 @@ function animate() {
   input.applyWalkMovement(delta);
   sensorController.update(delta);
   terrainAnimation.update(clock.getElapsedTime());
+  textOverlay.update(delta);
   modelLoader.updateIntro();
   controls.update();
   renderer.render(scene, camera);
@@ -87,9 +98,14 @@ function animate() {
     `target x: ${t.x.toFixed(2)} &nbsp; y: ${t.y.toFixed(2)} &nbsp; z: ${t.z.toFixed(2)}`;
 }
 
-Promise.all([
+const startup = [
   modelLoader.loadModel(params.model),
   ui.reloadEnvironment(),
-]).catch(console.error);
+];
+if (textParams.enabled) {
+  startup.push(textOverlay.init());
+}
+
+Promise.all(startup).catch(console.error);
 
 animate();

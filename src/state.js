@@ -1,5 +1,7 @@
 import { getDefaultEnvId, getEnvironments, params } from "./config.js";
 import { GRAIN_PARAM_KEYS, grainParams } from "./grain/grainParams.js";
+import { TEXT_LINES } from "./text/textLines.js";
+import { TEXT_PARAM_KEYS, textParams } from "./text/textParams.js";
 import {
   ANIMATION_PARAM_KEYS,
   MOTION_TYPES,
@@ -8,8 +10,8 @@ import {
   animationParams,
 } from "./terrain/animationParams.js";
 
-export const STATE_VERSION = 2;
-const SUPPORTED_VERSIONS = [1, 2];
+export const STATE_VERSION = 3;
+const SUPPORTED_VERSIONS = [1, 2, 3];
 
 const PARAM_KEYS = [
   "lightIntensity",
@@ -44,6 +46,17 @@ function pickGrainParams(source = {}) {
   return pickParams(source, GRAIN_PARAM_KEYS);
 }
 
+function pickTextParams(source = {}) {
+  return pickParams(source, TEXT_PARAM_KEYS);
+}
+
+function clampTextParams() {
+  const validIds = TEXT_LINES.map((line) => line.id);
+  if (!validIds.includes(textParams.lineId)) {
+    textParams.lineId = validIds[0];
+  }
+}
+
 function clampAnimationParams() {
   if (!MOTION_TYPES.includes(animationParams.motionType)) {
     animationParams.motionType = MOTION_TYPES[0];
@@ -72,12 +85,21 @@ function applyGrainState(grain) {
   }
 }
 
+function applyTextState(text) {
+  if (!text) return;
+  for (const key of TEXT_PARAM_KEYS) {
+    if (text[key] !== undefined) textParams[key] = text[key];
+  }
+  clampTextParams();
+}
+
 export function captureState({ scene, camera, controls }) {
   return {
     version: STATE_VERSION,
     params: Object.fromEntries(PARAM_KEYS.map((key) => [key, params[key]])),
     animation: pickAnimationParams(animationParams),
     grain: pickGrainParams(grainParams),
+    text: pickTextParams(textParams),
     scene: {
       environmentIntensity: scene.environmentIntensity,
       environmentRotationY: scene.environmentRotation.y,
@@ -138,6 +160,11 @@ export async function applyState(state, ctx, { silent = false } = {}) {
   if (state.grain) {
     applyGrainState(state.grain);
   }
+  if (state.version >= 3 && state.text) {
+    applyTextState(state.text);
+  } else {
+    textParams.enabled = false;
+  }
 
   ctx.ui.refresh();
   ctx.grainOverlay?.sync();
@@ -147,6 +174,16 @@ export async function applyState(state, ctx, { silent = false } = {}) {
     ctx.loadModel(params.model, loadOpts),
     ctx.reloadEnvironment(loadOpts),
   ]);
+
+  if (ctx.textOverlay) {
+    if (textParams.enabled) {
+      await ctx.textOverlay.render();
+      ctx.textOverlay.syncTransform();
+      ctx.textOverlay.updateMaterialUniforms();
+    } else {
+      ctx.textOverlay.setEnabled(false);
+    }
+  }
 
   document.getElementById("position").style.display = params.debug ? "block" : "none";
 }

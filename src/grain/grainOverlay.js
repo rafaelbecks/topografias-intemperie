@@ -36,7 +36,7 @@ export function createGrainOverlay() {
     }
 
     if (typeof window.grained !== "function") {
-      console.warn("[grain] grained.js not loaded — add vendor/grained.js to index.html");
+      console.warn("[grain] grained.js not loaded — add lib/grained.js to index.html");
       host.style.display = "none";
       return;
     }
