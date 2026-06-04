@@ -13,6 +13,12 @@ export function createSensorState() {
     offsetx: 0,
     offsety: 0,
     offsetz: 0,
+    qx: 0,
+    qy: 0,
+    qz: 0,
+    qw: 1,
+    gesturePushAt: 0,
+    gesturePullAt: 0,
     updatedAt: 0,
   };
 }
@@ -30,9 +36,24 @@ const ADDRESS_KEYS = {
   "/accelerometer/offsetx": "offsetx",
   "/accelerometer/offsety": "offsety",
   "/accelerometer/offsetz": "offsetz",
+  "/accelerometer/qx": "qx",
+  "/accelerometer/qy": "qy",
+  "/accelerometer/qz": "qz",
+  "/accelerometer/qw": "qw",
+};
+
+const GESTURE_KEYS = {
+  "/gesture/push": "gesturePushAt",
+  "/gesture/pull": "gesturePullAt",
 };
 
 export function applySensorMessage(state, address, value) {
+  const gestureKey = GESTURE_KEYS[address];
+  if (gestureKey) {
+    state[gestureKey] = performance.now();
+    return true;
+  }
+
   const key = ADDRESS_KEYS[address];
   if (!key) return false;
   state[key] = value[0] ?? 0;

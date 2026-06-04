@@ -1,4 +1,9 @@
-import { sensorParams } from "../sensor/sensorConfig.js";
+import { ROTATION_MODES, sensorParams } from "../sensor/sensorConfig.js";
+
+const ROTATION_MODE_OPTIONS = {
+  Euler: ROTATION_MODES.EULER,
+  Quaternion: ROTATION_MODES.QUATERNION,
+};
 
 export function setupSensorUI(pane, { sensorClient, sensorController }) {
   const folder = pane.addFolder({ title: "Controller sensor", expanded: false });
@@ -44,10 +49,18 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
 
   const mapping = folder.addFolder({ title: "Mapping", expanded: false });
 
-  mapping.addBinding(sensorParams, "applyRotation", { label: "rotation (angles)" });
+  mapping.addBinding(sensorParams, "applyRotation", { label: "rotation" });
+  mapping.addBinding(sensorParams, "rotationMode", {
+    label: "rotation mode",
+    options: ROTATION_MODE_OPTIONS,
+  });
   mapping.addBinding(sensorParams, "applyPosition", { label: "position (accel)" });
-  mapping.addBinding(sensorParams, "useOffsetAngles", { label: "use offset angles" });
-  mapping.addBinding(sensorParams, "useGyroAssist", { label: "gyro assist" });
+  mapping.addBinding(sensorParams, "useOffsetAngles", {
+    label: "use offset angles",
+  });
+  mapping.addBinding(sensorParams, "useGyroAssist", {
+    label: "gyro assist",
+  });
 
   mapping.addBinding(sensorParams, "rotationSensitivity", {
     label: "rotation",
@@ -71,6 +84,24 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
   });
 
   mapping.addBinding(sensorParams, "smoothing", {
+    min: 0.02,
+    max: 0.5,
+    step: 0.01,
+  });
+
+  const gestures = folder.addFolder({ title: "Gestures", expanded: false });
+
+  gestures.addBinding(sensorParams, "gestureZoomEnabled", { label: "push / pull zoom" });
+
+  gestures.addBinding(sensorParams, "gestureZoomAmount", {
+    label: "zoom amount",
+    min: 1,
+    max: 40,
+    step: 1,
+  });
+
+  gestures.addBinding(sensorParams, "gestureZoomSmoothing", {
+    label: "zoom smoothing",
     min: 0.02,
     max: 0.5,
     step: 0.01,

@@ -1,15 +1,27 @@
 import * as THREE from "three";
-import { DEG, sensorParams } from "./sensorConfig.js";
+import { DEG, ROTATION_MODES, sensorParams } from "./sensorConfig.js";
+import { applyGestureZoom } from "./sensorGestures.js";
 
 export function createSensorController({ getModel, controls, input }) {
+  const camera = controls.object;
   const targetRotation = new THREE.Euler(0, 0, 0, "YXZ");
   const targetPosition = new THREE.Vector3();
+  const targetQuaternion = new THREE.Quaternion();
   const homeRotation = new THREE.Euler();
   const homePosition = new THREE.Vector3();
+  const homeQuaternion = new THREE.Quaternion();
+  const baselineQuat = new THREE.Quaternion();
+  const sensorQuat = new THREE.Quaternion();
+  const deltaQuat = new THREE.Quaternion();
+  const scaledDeltaQuat = new THREE.Quaternion();
+
   let baseline = null;
   let calibrated = false;
   let savedOrbitEnabled = true;
   let lastState = null;
+  let lastGesturePushAt = 0;
+  let lastGesturePullAt = 0;
+  let gestureZoomPending = 0;
 
   function getAngles(state) {
     if (sensorParams.useOffsetAngles) {
@@ -18,17 +30,42 @@ export function createSensorController({ getModel, controls, input }) {
     return { x: state.angx, y: state.angy, z: state.angz };
   }
 
+  function getSensorQuaternion(state) {
+    sensorQuat.set(state.qx, state.qy, state.qz, state.qw);
+    if (sensorQuat.lengthSq() < 1e-8) {
+      sensorQuat.set(0, 0, 0, 1);
+    }
+    sensorQuat.normalize();
+    return sensorQuat;
+  }
+
+  function scaleQuaternionDelta(source, factor) {
+    if (factor <= 0) return scaledDeltaQuat.identity();
+
+    const angle = 2 * Math.acos(THREE.MathUtils.clamp(source.w, -1, 1));
+    if (angle < 1e-6) return scaledDeltaQuat.identity();
+
+    const axis = new THREE.Vector3(source.x, source.y, source.z);
+    if (axis.lengthSq() < 1e-8) return scaledDeltaQuat.identity();
+    axis.normalize();
+
+    return scaledDeltaQuat.setFromAxisAngle(axis, angle * factor);
+  }
+
   function calibrate(state) {
     const angles = getAngles(state);
     baseline = { x: angles.x, y: angles.y, z: angles.z };
+    baselineQuat.copy(getSensorQuaternion(state));
     calibrated = true;
 
     const model = getModel();
     if (!model) return;
     homeRotation.copy(model.rotation);
     homePosition.copy(model.position);
+    homeQuaternion.copy(model.quaternion);
     targetRotation.copy(homeRotation);
     targetPosition.copy(homePosition);
+    targetQuaternion.copy(homeQuaternion);
   }
 
   function setNavigationLocked(locked) {
@@ -46,15 +83,14 @@ export function createSensorController({ getModel, controls, input }) {
     if (!active) {
       calibrated = false;
       baseline = null;
+      gestureZoomPending = 0;
       setNavigationLocked(false);
       return;
     }
     setNavigationLocked(true);
   }
 
-  function computeTargets(state, delta) {
-    if (!baseline) return;
-
+  function computeEulerTargets(state, delta) {
     const angles = getAngles(state);
     const rot = sensorParams.rotationSensitivity * DEG;
     const pitch = (angles.y - baseline.y) * rot;
@@ -73,7 +109,15 @@ export function createSensorController({ getModel, controls, input }) {
       targetRotation.y += state.gz * g;
       targetRotation.z += state.gx * g;
     }
+  }
 
+  function computeQuaternionTargets(state) {
+    deltaQuat.copy(baselineQuat).invert().multiply(getSensorQuaternion(state));
+    const scaled = scaleQuaternionDelta(deltaQuat, sensorParams.rotationSensitivity);
+    targetQuaternion.copy(homeQuaternion).multiply(scaled);
+  }
+
+  function computePositionTargets(state) {
     if (sensorParams.applyPosition) {
       const p = sensorParams.positionSensitivity;
       targetPosition.set(
@@ -86,7 +130,34 @@ export function createSensorController({ getModel, controls, input }) {
     }
   }
 
+  function computeTargets(state, delta) {
+    if (!baseline) return;
+
+    if (sensorParams.rotationMode === ROTATION_MODES.QUATERNION) {
+      computeQuaternionTargets(state);
+    } else {
+      computeEulerTargets(state, delta);
+    }
+
+    computePositionTargets(state);
+  }
+
+  function handleGestures(state) {
+    if (!sensorParams.gestureZoomEnabled) return;
+
+    if (state.gesturePushAt && state.gesturePushAt !== lastGesturePushAt) {
+      lastGesturePushAt = state.gesturePushAt;
+      gestureZoomPending -= sensorParams.gestureZoomAmount;
+    }
+
+    if (state.gesturePullAt && state.gesturePullAt !== lastGesturePullAt) {
+      lastGesturePullAt = state.gesturePullAt;
+      gestureZoomPending += sensorParams.gestureZoomAmount;
+    }
+  }
+
   function handleState(state) {
+    handleGestures(state);
     lastState = state;
   }
 
@@ -107,9 +178,13 @@ export function createSensorController({ getModel, controls, input }) {
     const t = 1 - Math.pow(1 - sensorParams.smoothing, delta * 60);
 
     if (sensorParams.applyRotation) {
-      model.rotation.x += (targetRotation.x - model.rotation.x) * t;
-      model.rotation.y += (targetRotation.y - model.rotation.y) * t;
-      model.rotation.z += (targetRotation.z - model.rotation.z) * t;
+      if (sensorParams.rotationMode === ROTATION_MODES.QUATERNION) {
+        model.quaternion.slerp(targetQuaternion, t);
+      } else {
+        model.rotation.x += (targetRotation.x - model.rotation.x) * t;
+        model.rotation.y += (targetRotation.y - model.rotation.y) * t;
+        model.rotation.z += (targetRotation.z - model.rotation.z) * t;
+      }
     }
 
     if (sensorParams.applyPosition) {
@@ -117,17 +192,30 @@ export function createSensorController({ getModel, controls, input }) {
       model.position.y += (targetPosition.y - model.position.y) * t;
       model.position.z += (targetPosition.z - model.position.z) * t;
     }
+
+    if (sensorParams.gestureZoomEnabled) {
+      gestureZoomPending = applyGestureZoom({
+        camera,
+        controls,
+        pending: gestureZoomPending,
+        delta,
+        smoothing: sensorParams.gestureZoomSmoothing,
+      });
+    }
   }
 
   function resetOrientation() {
     const model = getModel();
     if (!model) return;
     model.rotation.copy(homeRotation);
+    model.quaternion.copy(homeQuaternion);
     model.position.copy(homePosition);
     targetRotation.copy(homeRotation);
+    targetQuaternion.copy(homeQuaternion);
     targetPosition.copy(homePosition);
     calibrated = false;
     baseline = null;
+    gestureZoomPending = 0;
   }
 
   return {
