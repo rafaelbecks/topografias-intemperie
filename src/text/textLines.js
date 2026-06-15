@@ -46,3 +46,9 @@ export const TEXT_LINE_OPTIONS = Object.fromEntries(
 export function getTextById(id) {
   return TEXT_LINES.find((line) => line.id === id)?.text ?? TEXT_LINES[0].text;
 }
+
+export const DEFAULT_PAGE_TITLE = "topografías de la intemperie";
+
+export function syncPageTitle(lineId) {
+  document.title = getTextById(lineId) || DEFAULT_PAGE_TITLE;
+}

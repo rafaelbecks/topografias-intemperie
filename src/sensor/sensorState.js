@@ -17,8 +17,8 @@ export function createSensorState() {
     qy: 0,
     qz: 0,
     qw: 1,
-    gesturePushAt: 0,
-    gesturePullAt: 0,
+    distance: null,
+    distanceAt: 0,
     updatedAt: 0,
   };
 }
@@ -42,15 +42,12 @@ const ADDRESS_KEYS = {
   "/accelerometer/qw": "qw",
 };
 
-const GESTURE_KEYS = {
-  "/gesture/push": "gesturePushAt",
-  "/gesture/pull": "gesturePullAt",
-};
+const DISTANCE_ADDRESS = "/tfluna/distance";
 
 export function applySensorMessage(state, address, value) {
-  const gestureKey = GESTURE_KEYS[address];
-  if (gestureKey) {
-    state[gestureKey] = performance.now();
+  if (address === DISTANCE_ADDRESS) {
+    state.distance = value[0] ?? 0;
+    state.distanceAt = performance.now();
     return true;
   }
 

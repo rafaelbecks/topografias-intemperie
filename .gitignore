@@ -28,4 +28,8 @@ Thumbs.db
 # Logs
 *.log
 
+# Oversized audio files removed from git history
+audio/env/Estocolmo viernes en la noche.wav
+audio/env/LLUVIA BOGOTA LARGO - 7 PATIOS.wav
+
 

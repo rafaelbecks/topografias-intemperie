@@ -1,15 +1,30 @@
 import * as THREE from "three";
-import { DEG, ROTATION_MODES, sensorParams } from "./sensorConfig.js";
-import { applyGestureZoom } from "./sensorGestures.js";
+import {
+  DEG,
+  ROTATION_MODES,
+  ROTATION_TARGETS,
+  sensorParams,
+} from "./sensorConfig.js";
+import { createDistanceZoom } from "./sensorDistanceZoom.js";
+
+function smoothFactor(rate, delta) {
+  return 1 - Math.exp(-rate * delta * 60);
+}
 
 export function createSensorController({ getModel, controls, input }) {
   const camera = controls.object;
+  const applyDistanceZoom = createDistanceZoom();
   const targetRotation = new THREE.Euler(0, 0, 0, "YXZ");
   const targetPosition = new THREE.Vector3();
   const targetQuaternion = new THREE.Quaternion();
   const homeRotation = new THREE.Euler();
   const homePosition = new THREE.Vector3();
   const homeQuaternion = new THREE.Quaternion();
+  const homeOffset = new THREE.Vector3();
+  const orbitOffset = new THREE.Vector3();
+  const cameraOffset = new THREE.Vector3();
+  const orbitEuler = new THREE.Euler(0, 0, 0, "YXZ");
+  const orbitQuat = new THREE.Quaternion();
   const baselineQuat = new THREE.Quaternion();
   const sensorQuat = new THREE.Quaternion();
   const deltaQuat = new THREE.Quaternion();
@@ -19,9 +34,7 @@ export function createSensorController({ getModel, controls, input }) {
   let calibrated = false;
   let savedOrbitEnabled = true;
   let lastState = null;
-  let lastGesturePushAt = 0;
-  let lastGesturePullAt = 0;
-  let gestureZoomPending = 0;
+  let smoothedDistance = null;
 
   function getAngles(state) {
     if (sensorParams.useOffsetAngles) {
@@ -52,20 +65,29 @@ export function createSensorController({ getModel, controls, input }) {
     return scaledDeltaQuat.setFromAxisAngle(axis, angle * factor);
   }
 
+  function captureHomePose() {
+    const model = getModel();
+    if (model) {
+      homeRotation.copy(model.rotation);
+      homePosition.copy(model.position);
+      homeQuaternion.copy(model.quaternion);
+      targetRotation.copy(homeRotation);
+      targetPosition.copy(homePosition);
+      targetQuaternion.copy(homeQuaternion);
+    }
+
+    homeOffset.subVectors(camera.position, controls.target);
+    if (homeOffset.lengthSq() < 1e-8) {
+      homeOffset.set(0, 0, 1);
+    }
+  }
+
   function calibrate(state) {
     const angles = getAngles(state);
     baseline = { x: angles.x, y: angles.y, z: angles.z };
     baselineQuat.copy(getSensorQuaternion(state));
     calibrated = true;
-
-    const model = getModel();
-    if (!model) return;
-    homeRotation.copy(model.rotation);
-    homePosition.copy(model.position);
-    homeQuaternion.copy(model.quaternion);
-    targetRotation.copy(homeRotation);
-    targetPosition.copy(homePosition);
-    targetQuaternion.copy(homeQuaternion);
+    captureHomePose();
   }
 
   function setNavigationLocked(locked) {
@@ -83,7 +105,7 @@ export function createSensorController({ getModel, controls, input }) {
     if (!active) {
       calibrated = false;
       baseline = null;
-      gestureZoomPending = 0;
+      smoothedDistance = null;
       setNavigationLocked(false);
       return;
     }
@@ -103,11 +125,16 @@ export function createSensorController({ getModel, controls, input }) {
       homeRotation.z + roll
     );
 
+    orbitEuler.set(pitch, yaw, roll);
+
     if (sensorParams.useGyroAssist) {
       const g = sensorParams.gyroSensitivity * delta;
       targetRotation.x += state.gy * g;
       targetRotation.y += state.gz * g;
       targetRotation.z += state.gx * g;
+      orbitEuler.x += state.gy * g;
+      orbitEuler.y += state.gz * g;
+      orbitEuler.z += state.gx * g;
     }
   }
 
@@ -115,6 +142,7 @@ export function createSensorController({ getModel, controls, input }) {
     deltaQuat.copy(baselineQuat).invert().multiply(getSensorQuaternion(state));
     const scaled = scaleQuaternionDelta(deltaQuat, sensorParams.rotationSensitivity);
     targetQuaternion.copy(homeQuaternion).multiply(scaled);
+    orbitQuat.copy(scaled);
   }
 
   function computePositionTargets(state) {
@@ -142,31 +170,78 @@ export function createSensorController({ getModel, controls, input }) {
     computePositionTargets(state);
   }
 
-  function handleGestures(state) {
-    if (!sensorParams.gestureZoomEnabled) return;
+  function applyCameraOrbitRotation(t) {
+    orbitOffset.copy(homeOffset);
 
-    if (state.gesturePushAt && state.gesturePushAt !== lastGesturePushAt) {
-      lastGesturePushAt = state.gesturePushAt;
-      gestureZoomPending -= sensorParams.gestureZoomAmount;
+    if (sensorParams.rotationMode === ROTATION_MODES.QUATERNION) {
+      orbitOffset.applyQuaternion(orbitQuat);
+    } else {
+      scaledDeltaQuat.setFromEuler(orbitEuler);
+      orbitOffset.applyQuaternion(scaledDeltaQuat);
     }
 
-    if (state.gesturePullAt && state.gesturePullAt !== lastGesturePullAt) {
-      lastGesturePullAt = state.gesturePullAt;
-      gestureZoomPending += sensorParams.gestureZoomAmount;
+    cameraOffset.subVectors(camera.position, controls.target);
+    const currentDist = cameraOffset.length();
+    if (currentDist > 1e-6) {
+      orbitOffset.setLength(currentDist);
+    }
+
+    cameraOffset.lerp(orbitOffset, t);
+    camera.position.copy(controls.target).add(cameraOffset);
+    camera.lookAt(controls.target);
+  }
+
+  function applyModelRotation(model, t) {
+    if (sensorParams.rotationMode === ROTATION_MODES.QUATERNION) {
+      model.quaternion.slerp(targetQuaternion, t);
+    } else {
+      model.rotation.x += (targetRotation.x - model.rotation.x) * t;
+      model.rotation.y += (targetRotation.y - model.rotation.y) * t;
+      model.rotation.z += (targetRotation.z - model.rotation.z) * t;
     }
   }
 
+  function filterSensorDistance(raw, delta) {
+    if (smoothedDistance === null) return raw;
+
+    const deadzone = sensorParams.distanceThreshold;
+    const deltaCm = raw - smoothedDistance;
+    const target = Math.abs(deltaCm) < deadzone ? smoothedDistance : raw;
+    const blend = smoothFactor(sensorParams.distanceSmoothing * 1.4, delta);
+    return smoothedDistance + (target - smoothedDistance) * blend;
+  }
+
+  function handleDistanceZoom(state, delta) {
+    if (!sensorParams.distanceZoomEnabled || state.distance == null) return;
+
+    smoothedDistance = filterSensorDistance(state.distance, delta);
+
+    applyDistanceZoom({
+      camera,
+      controls,
+      sensorDistance: smoothedDistance,
+      delta,
+      sensitivity: sensorParams.distanceSensitivity,
+      smoothing: sensorParams.distanceSmoothing,
+    });
+  }
+
   function handleState(state) {
-    handleGestures(state);
     lastState = state;
   }
 
   function update(delta) {
     const state = lastState;
-    if (!sensorParams.enabled || !state?.updatedAt) return;
+    if (!sensorParams.enabled) return;
 
     const model = getModel();
     if (!model) return;
+
+    if (state?.distanceAt) {
+      handleDistanceZoom(state, delta);
+    }
+
+    if (!state?.updatedAt) return;
 
     if (!calibrated) {
       calibrate(state);
@@ -175,47 +250,40 @@ export function createSensorController({ getModel, controls, input }) {
 
     computeTargets(state, delta);
 
-    const t = 1 - Math.pow(1 - sensorParams.smoothing, delta * 60);
+    const t = smoothFactor(sensorParams.smoothing * 4, delta);
 
     if (sensorParams.applyRotation) {
-      if (sensorParams.rotationMode === ROTATION_MODES.QUATERNION) {
-        model.quaternion.slerp(targetQuaternion, t);
+      if (sensorParams.rotationTarget === ROTATION_TARGETS.CAMERA) {
+        applyCameraOrbitRotation(t);
       } else {
-        model.rotation.x += (targetRotation.x - model.rotation.x) * t;
-        model.rotation.y += (targetRotation.y - model.rotation.y) * t;
-        model.rotation.z += (targetRotation.z - model.rotation.z) * t;
+        applyModelRotation(model, t);
       }
     }
 
-    if (sensorParams.applyPosition) {
+    if (sensorParams.applyPosition && sensorParams.rotationTarget === ROTATION_TARGETS.MODEL) {
       model.position.x += (targetPosition.x - model.position.x) * t;
       model.position.y += (targetPosition.y - model.position.y) * t;
       model.position.z += (targetPosition.z - model.position.z) * t;
-    }
-
-    if (sensorParams.gestureZoomEnabled) {
-      gestureZoomPending = applyGestureZoom({
-        camera,
-        controls,
-        pending: gestureZoomPending,
-        delta,
-        smoothing: sensorParams.gestureZoomSmoothing,
-      });
     }
   }
 
   function resetOrientation() {
     const model = getModel();
     if (!model) return;
+
     model.rotation.copy(homeRotation);
     model.quaternion.copy(homeQuaternion);
     model.position.copy(homePosition);
     targetRotation.copy(homeRotation);
     targetQuaternion.copy(homeQuaternion);
     targetPosition.copy(homePosition);
+
+    camera.position.copy(controls.target).add(homeOffset);
+    camera.lookAt(controls.target);
+
     calibrated = false;
     baseline = null;
-    gestureZoomPending = 0;
+    smoothedDistance = null;
   }
 
   return {

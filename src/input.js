@@ -12,7 +12,10 @@ export function createInputSystem(camera, controls) {
     if (e.repeat) return;
     switch (e.code) {
       case "KeyW": moveState.forward = true; break;
-      case "KeyS": moveState.backward = true; break;
+      case "KeyS":
+        if (e.shiftKey) break;
+        moveState.backward = true;
+        break;
       case "KeyA": moveState.left = true; break;
       case "KeyD": moveState.right = true; break;
       default: break;

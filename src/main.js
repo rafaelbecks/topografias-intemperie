@@ -1,100 +1,22 @@
-import * as THREE from "three";
-import { createSceneSystem } from "./scene.js";
-import { createModelLoader } from "./modelLoader.js";
-import { createInputSystem } from "./input.js";
-import { createUI } from "./ui.js";
-import { createTerrainAnimation } from "./terrain/terrainAnimation.js";
-import { createGrainOverlay } from "./grain/grainOverlay.js";
-import { createLoading } from "./ui/loading.js";
-import { createSensorClient } from "./sensor/sensorClient.js";
-import { createSensorController } from "./sensor/sensorController.js";
-import { sensorParams } from "./sensor/sensorConfig.js";
-import { createTextOverlay } from "./text/textOverlay.js";
-const loading = createLoading();
+import { createFrontPage } from "./front/createFrontPage.js";
+import { unlockAudioFromUserGesture } from "./audio/audioUnlock.js";
+import { getInitialSceneName } from "./scenes.js";
 
-const sceneSystem = createSceneSystem({ loading });
-
-const { scene, camera, renderer, controls, light, ambient, loadEnvironment, clearEnvironment } =
-  sceneSystem;
-
-const terrainAnimation = createTerrainAnimation();
-const grainOverlay = createGrainOverlay();
-const input = createInputSystem(camera, controls);
-
-const sensorClient = createSensorClient({
-  onState: (state) => sensorController.handleState(state),
-});
-
-let sensorController;
-const modelLoader = createModelLoader({
-  scene,
-  camera,
-  controls,
-  loading,
-  onModelLoaded: (model) => {
-    terrainAnimation.bindModel(model);
-    textOverlay.syncTransform();
-    if (sensorParams.enabled) {
-      sensorController.calibrate(sensorClient.getState());
-    }
-  },
-});
-
-sensorController = createSensorController({
-  getModel: () => modelLoader.getCurrentModel(),
-  controls,
-  input,
-});
-
-const textOverlay = createTextOverlay({
-  scene,
-  loading,
-  getModelBounds: () => modelLoader.getModelBounds(),
-});
-
-const ui = createUI({
-  loadModel: modelLoader.loadModel,
-  loadEnvironment,
-  clearEnvironment,
-  scene,
-  camera,
-  renderer,
-  light,
-  ambient,
-  controls,
-  modelLoader,
-  input,
-  terrainAnimation,
-  grainOverlay,
-  loading,
-  sensorClient,
-  sensorController,
-  textOverlay,
-});
-
-const posEl = document.getElementById("position");
-posEl.style.display = "none";
-
-const clock = new THREE.Clock();
-
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-  input.applyWalkMovement(delta);
-  sensorController.update(delta);
-  terrainAnimation.update(clock.getElapsedTime());
-  textOverlay.update(delta);
-  modelLoader.updateIntro();
-  controls.update();
-  renderer.render(scene, camera);
-
-  const p = camera.position;
-  const t = controls.target;
-  posEl.innerHTML =
-    `cam &nbsp; x: ${p.x.toFixed(2)} &nbsp; y: ${p.y.toFixed(2)} &nbsp; z: ${p.z.toFixed(2)}<br>` +
-    `target x: ${t.x.toFixed(2)} &nbsp; y: ${t.y.toFixed(2)} &nbsp; z: ${t.z.toFixed(2)}`;
+async function enterViewer(sceneName) {
+  const { bootSceneViewer } = await import("./sceneMain.js");
+  await bootSceneViewer(sceneName);
 }
 
-Promise.all([ui.scenesUI.loadDefault()]).catch(console.error);
+const sceneParam = new URLSearchParams(location.search).get("scene");
 
-animate();
+if (sceneParam) {
+  enterViewer(getInitialSceneName());
+} else {
+  const front = createFrontPage({
+    onSceneSelect: (name) => {
+      unlockAudioFromUserGesture();
+      front.destroy();
+      enterViewer(name);
+    },
+  });
+}

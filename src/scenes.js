@@ -1,7 +1,16 @@
 import { loadStateFromFile, loadStateFromUrl } from "./state.js";
 
-export const DEFAULT_SCENE = "memory.json";
+export const DEFAULT_SCENE = "ventanas.json";
 export const SCENES_BASE = "./scenes/";
+
+/** Number keys 1…N on the front page map to these scenes (in order). */
+export const SCENE_ORDER = [
+  "cienaga.json",
+  "cuerda.json",
+  "disension.json",
+  "inefable.json",
+  "ventanas.json",
+];
 
 export function sceneUrl(name) {
   return `${SCENES_BASE}${name}`;
@@ -13,6 +22,12 @@ export async function loadSceneByName(name, ctx) {
 
 export async function loadDefaultScene(ctx) {
   return loadSceneByName(DEFAULT_SCENE, ctx);
+}
+
+export function getInitialSceneName() {
+  const param = new URLSearchParams(window.location.search).get("scene");
+  if (param) return param;
+  return DEFAULT_SCENE;
 }
 
 export function supportsDirectoryPicker() {

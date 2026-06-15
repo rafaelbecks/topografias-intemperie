@@ -3,12 +3,15 @@ import { getEnvPath, params } from "./config.js";
 import { captureState, downloadState, loadStateFromFile } from "./state.js";
 import { setupAnimationUI } from "./terrain/animationUI.js";
 import { setupGrainUI } from "./grain/grainUI.js";
+import { setupDitherUI } from "./dither/ditherUI.js";
 import { setupSceneTabUI } from "./ui/sceneTabUI.js";
 import { setupPaneToggle } from "./ui/paneToggle.js";
 import { setupScenesUI } from "./ui/scenesUI.js";
 import { createSidePanel } from "./ui/sidePanel.js";
 import { setupSensorUI } from "./ui/sensorUI.js";
+import { setupKeyboardShortcuts } from "./ui/keyboardShortcuts.js";
 import { setupTextUI } from "./text/textUI.js";
+import { setupAudioUI } from "./audio/audioUI.js";
 
 export function createUI(ctx) {
   const { loadModel, loadEnvironment, scene, camera, controls, terrainAnimation, grainOverlay } =
@@ -68,12 +71,18 @@ export function createUI(ctx) {
   });
 
   const tab = pane.addTab({
-    pages: [{ title: "Scene" }, { title: "Animation" }, { title: "Text" }],
+    pages: [
+      { title: "Scene" },
+      { title: "Animation" },
+      { title: "Text" },
+      { title: "Audio" },
+    ],
   });
 
   const scenePage = tab.pages[0];
   const animationPage = tab.pages[1];
   const textPage = tab.pages[2];
+  const audioPage = tab.pages[3];
 
   const sceneTab = setupSceneTabUI(scenePage, ctx);
 
@@ -82,13 +91,22 @@ export function createUI(ctx) {
     sceneTab.refreshModelBlade();
     sceneTab.setupEnvironmentControl();
     grainOverlay.sync();
+    ctx.ditherOverlay?.sync();
+    ctx.oceanSystem?.sync();
   }
 
   setupAnimationUI(animationPage, terrainAnimation, pane);
   setupGrainUI(pane, grainOverlay);
+  if (ctx.ditherOverlay) {
+    setupDitherUI(pane, ctx.ditherOverlay);
+  }
 
   if (ctx.textOverlay) {
     setupTextUI(textPage, ctx.textOverlay);
+  }
+
+  if (ctx.audioSystem) {
+    setupAudioUI(audioPage, ctx.audioSystem);
   }
 
   const sensorUI = setupSensorUI(pane, {
@@ -100,6 +118,11 @@ export function createUI(ctx) {
   if (ctx.sensorClient) {
     ctx.sensorClient.onStatus = sensorUI.onStatus;
   }
+
+  setupKeyboardShortcuts({
+    audioSystem: ctx.audioSystem,
+    toggleSensorActive: sensorUI.toggleActive,
+  });
 
   return { pane, refresh, reloadEnvironment, sensorUI, paneToggle, scenesUI };
 }

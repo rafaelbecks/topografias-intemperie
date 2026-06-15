@@ -1,6 +1,14 @@
 import { getDefaultEnvId, getEnvironments, params } from "./config.js";
+import { AUDIO_PARAM_KEYS, audioParams } from "./audio/audioParams.js";
+import {
+  DEFAULT_ENV_SOUND,
+  DEFAULT_OBJECT_SOUND,
+  ENV_SOUNDS,
+  OBJECT_SOUNDS,
+} from "./audio/audioSources.js";
 import { GRAIN_PARAM_KEYS, grainParams } from "./grain/grainParams.js";
-import { TEXT_LINES } from "./text/textLines.js";
+import { DITHER_PARAM_KEYS, ditherParams } from "./dither/ditherParams.js";
+import { DEFAULT_PAGE_TITLE, syncPageTitle, TEXT_LINES } from "./text/textLines.js";
 import { TEXT_PARAM_KEYS, textParams } from "./text/textParams.js";
 import {
   ANIMATION_PARAM_KEYS,
@@ -9,9 +17,10 @@ import {
   SELECTION_MODES,
   animationParams,
 } from "./terrain/animationParams.js";
+import { clampOceanParams, OCEAN_PARAM_KEYS, oceanParams } from "./ocean/oceanParams.js";
 
-export const STATE_VERSION = 3;
-const SUPPORTED_VERSIONS = [1, 2, 3];
+export const STATE_VERSION = 5;
+const SUPPORTED_VERSIONS = [1, 2, 3, 4, 5];
 
 const PARAM_KEYS = [
   "lightIntensity",
@@ -46,8 +55,29 @@ function pickGrainParams(source = {}) {
   return pickParams(source, GRAIN_PARAM_KEYS);
 }
 
+function pickDitherParams(source = {}) {
+  return pickParams(source, DITHER_PARAM_KEYS);
+}
+
 function pickTextParams(source = {}) {
   return pickParams(source, TEXT_PARAM_KEYS);
+}
+
+function pickAudioParams(source = {}) {
+  return pickParams(source, AUDIO_PARAM_KEYS);
+}
+
+function pickOceanParams(source = {}) {
+  return pickParams(source, OCEAN_PARAM_KEYS);
+}
+
+function clampAudioParams() {
+  if (!ENV_SOUNDS[audioParams.envSound]) {
+    audioParams.envSound = DEFAULT_ENV_SOUND;
+  }
+  if (!OBJECT_SOUNDS[audioParams.objectSound]) {
+    audioParams.objectSound = DEFAULT_OBJECT_SOUND;
+  }
 }
 
 function clampTextParams() {
@@ -85,6 +115,13 @@ function applyGrainState(grain) {
   }
 }
 
+function applyDitherState(dither) {
+  if (!dither) return;
+  for (const key of DITHER_PARAM_KEYS) {
+    if (dither[key] !== undefined) ditherParams[key] = dither[key];
+  }
+}
+
 function applyTextState(text) {
   if (!text) return;
   for (const key of TEXT_PARAM_KEYS) {
@@ -93,13 +130,32 @@ function applyTextState(text) {
   clampTextParams();
 }
 
+function applyAudioState(audio) {
+  if (!audio) return;
+  for (const key of AUDIO_PARAM_KEYS) {
+    if (audio[key] !== undefined) audioParams[key] = audio[key];
+  }
+  clampAudioParams();
+}
+
+function applyOceanState(ocean) {
+  if (!ocean) return;
+  for (const key of OCEAN_PARAM_KEYS) {
+    if (ocean[key] !== undefined) oceanParams[key] = ocean[key];
+  }
+  clampOceanParams();
+}
+
 export function captureState({ scene, camera, controls }) {
   return {
     version: STATE_VERSION,
     params: Object.fromEntries(PARAM_KEYS.map((key) => [key, params[key]])),
     animation: pickAnimationParams(animationParams),
     grain: pickGrainParams(grainParams),
+    dither: pickDitherParams(ditherParams),
     text: pickTextParams(textParams),
+    audio: pickAudioParams(audioParams),
+    ocean: pickOceanParams(oceanParams),
     scene: {
       environmentIntensity: scene.environmentIntensity,
       environmentRotationY: scene.environmentRotation.y,
@@ -160,14 +216,32 @@ export async function applyState(state, ctx, { silent = false } = {}) {
   if (state.grain) {
     applyGrainState(state.grain);
   }
+  if (state.dither) {
+    applyDitherState(state.dither);
+  }
   if (state.version >= 3 && state.text) {
     applyTextState(state.text);
+    syncPageTitle(textParams.lineId);
   } else {
     textParams.enabled = false;
+    document.title = DEFAULT_PAGE_TITLE;
+  }
+  if (state.version >= 4 && state.audio) {
+    applyAudioState(state.audio);
+  } else {
+    audioParams.playing = false;
+  }
+  if (state.version >= 5 && state.ocean) {
+    applyOceanState(state.ocean);
+  } else {
+    oceanParams.enabled = false;
   }
 
   ctx.ui.refresh();
   ctx.grainOverlay?.sync();
+  ctx.ditherOverlay?.sync();
+  ctx.oceanSystem?.sync();
+  ctx.audioSystem?.stop({ preserveIntent: true });
 
   const loadOpts = { silent };
   await Promise.all([
@@ -183,6 +257,10 @@ export async function applyState(state, ctx, { silent = false } = {}) {
     } else {
       ctx.textOverlay.setEnabled(false);
     }
+  }
+
+  if (ctx.audioSystem) {
+    await ctx.audioSystem.sync({ resumeFadeIn: false });
   }
 
   document.getElementById("position").style.display = params.debug ? "block" : "none";

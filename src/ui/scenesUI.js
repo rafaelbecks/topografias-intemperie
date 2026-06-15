@@ -1,11 +1,10 @@
 import {
-  DEFAULT_SCENE,
   ensureDirPermission,
   listJsonFiles,
-  loadDefaultScene,
   loadSceneByName,
   loadSceneFromHandle,
   pickScenesFolder,
+  SCENE_ORDER,
   supportsDirectoryPicker,
 } from "../scenes.js";
 
@@ -14,11 +13,14 @@ import {
  * @returns {{ currentScene: string, refreshSceneList: Function }}
  */
 export function setupScenesUI(folder, ctx) {
-  let currentScene = DEFAULT_SCENE;
+  let currentScene = SCENE_ORDER[0];
   let dirHandle = null;
   let fileHandles = new Map();
 
-  const sceneOptions = { [DEFAULT_SCENE]: DEFAULT_SCENE };
+  const sceneOptions = Object.fromEntries(SCENE_ORDER.map((name) => [name, name]));
+  if (!sceneOptions[currentScene]) {
+    sceneOptions[currentScene] = currentScene;
+  }
   let sceneBinding;
 
   function rebuildSceneBinding() {
@@ -62,10 +64,9 @@ export function setupScenesUI(folder, ctx) {
     }
 
     if (!sceneOptions[currentScene]) {
-      currentScene = handles[0]?.name ?? DEFAULT_SCENE;
+      currentScene = handles[0]?.name ?? SCENE_ORDER[0];
       if (!sceneOptions[currentScene]) {
-        sceneOptions[DEFAULT_SCENE] = DEFAULT_SCENE;
-        currentScene = DEFAULT_SCENE;
+        sceneOptions[currentScene] = currentScene;
       }
     }
 
@@ -102,6 +103,6 @@ export function setupScenesUI(folder, ctx) {
 
   return {
     currentScene: () => currentScene,
-    loadDefault: () => loadDefaultScene(ctx),
+    loadScene: (name) => loadSelectedScene(name),
   };
 }

@@ -1,0 +1,111 @@
+{
+  "version": 5,
+  "params": {
+    "lightIntensity": 2.8,
+    "ambient": 1.52,
+    "exposure": 0.2891304347826087,
+    "roughness": 0.5,
+    "envFormat": "exr",
+    "environment": "exr_1",
+    "bgBlur": 0.15,
+    "moveSpeed": 1,
+    "fpMove": true,
+    "autoRotate": false,
+    "rotateSpeed": 0.6,
+    "debug": false,
+    "wireframe": false,
+    "model": "cart2"
+  },
+  "animation": {
+    "playing": true,
+    "motionType": "tectonic",
+    "amplitude": 0.10999999999999999,
+    "frequency": 1.47,
+    "speed": 1.3,
+    "phaseSpread": 1.43,
+    "randomness": 0.73,
+    "axisX": 0.35,
+    "axisY": 1,
+    "axisZ": 0.25,
+    "selectionMode": "all",
+    "percentage": 10,
+    "seed": 59782,
+    "nthStep": 17,
+    "invertSelection": false,
+    "phaseMode": "index",
+    "radialBias": 1,
+    "heightBias": 0.6,
+    "showSelectedLayers": false
+  },
+  "grain": {
+    "enabled": true,
+    "animate": true,
+    "grainOpacity": 0.305,
+    "grainDensity": 3,
+    "patternWidth": 100,
+    "patternHeight": 100,
+    "grainWidth": 1,
+    "grainHeight": 1,
+    "grainChaos": 0.5,
+    "grainSpeed": 20
+  },
+  "text": {
+    "enabled": true,
+    "lineId": "cuerda",
+    "fontSize": 105,
+    "letterSpacing": 0.27,
+    "depth": 15,
+    "scale": 0.35,
+    "orbitSpeed": 0.08,
+    "wireframe": true,
+    "twisterSpeed": 0.4,
+    "twisterHeight": 300,
+    "twisterRadius": 300
+  },
+  "audio": {
+    "playing": true,
+    "envSound": "tigre",
+    "envVolume": 0.10999999999999997,
+    "objectSound": "piano_resonancia",
+    "objectVolume": 0.65,
+    "sensitivity": 1,
+    "loopFadeMs": 800
+  },
+  "ocean": {
+    "enabled": true,
+    "shape": "noise",
+    "height": -3,
+    "sizeScale": 6.5,
+    "shapeSegments": 102,
+    "ovalRatio": 1.5,
+    "noiseAmplitude": 0.7100000000000001,
+    "noiseScale": 0.65,
+    "noiseSeed": 42,
+    "envelopeRadius": 2.5,
+    "torusTube": 0.35,
+    "envelopeSide": "double",
+    "waterColor": "#235c42",
+    "sunColor": "#d57c40",
+    "sunElevation": 57.699999999999996,
+    "sunAzimuth": -15.70000000000001,
+    "distortionScale": 8,
+    "waveSize": 4.3999999999999995,
+    "alpha": 1
+  },
+  "scene": {
+    "environmentIntensity": 1.36,
+    "environmentRotationY": 0
+  },
+  "camera": {
+    "position": [
+      1.5875099781793556,
+      -0.14505884913971018,
+      -3.9878110983062283
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ]
+  }
+}

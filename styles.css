@@ -1,0 +1,294 @@
+body { margin: 0; overflow: hidden; background: #111; }
+
+body.front-page {
+  background-color: #000;
+  background-attachment: fixed;
+}
+
+body.front-page #panel-toggle,
+body.front-page #side-panel,
+body.front-page #position {
+  display: none;
+}
+
+body.scene-viewer {
+  background: #111;
+}
+
+#front-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 24px;
+  box-sizing: border-box;
+  perspective: 900px;
+}
+
+.front-heading {
+  transform-style: preserve-3d;
+}
+
+.front-title {
+  margin: 0;
+  font-family: "Ovo", serif;
+  font-size: var(--front-font-size, 300px);
+  font-weight: 400;
+  text-align: center;
+  letter-spacing: var(--front-letter-spacing, -0.07em);
+  color: transparent;
+  -webkit-text-stroke: var(--front-stroke-width, 3px) var(--front-stroke-color, #005016);
+  paint-order: stroke fill;
+  user-select: none;
+  transform-style: preserve-3d;
+}
+
+.front-title__line {
+  display: block;
+}
+
+
+canvas {
+  display: block;
+}
+
+#grain-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+#dither-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 51;
+  display: none;
+  background: transparent;
+}
+
+#dither-overlay canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: url(#ditherFilter);
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+#position {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.75);
+  background: rgba(0,0,0,0.45);
+  padding: 8px 12px;
+  border-radius: 6px;
+  pointer-events: none;
+  line-height: 1.6;
+  z-index: 999;
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 998;
+}
+
+#loading[hidden] {
+  display: none !important;
+}
+
+.loading-card {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 14px 18px;
+  border-radius: 6px;
+  min-width: 180px;
+  text-align: center;
+}
+
+.loading-label {
+  margin: 0 0 10px;
+  letter-spacing: 0.02em;
+}
+
+.loading-track {
+  position: relative;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.loading-bar {
+  height: 100%;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 1px;
+  transition: width 0.15s ease-out;
+}
+
+.loading-bar--indeterminate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 35% !important;
+  transition: none;
+  animation: loading-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes loading-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
+#panel-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  mix-blend-mode: difference;
+  pointer-events: auto;
+}
+
+#panel-toggle[aria-expanded="true"] {
+  display: none;
+}
+
+#panel-toggle img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+#side-panel {
+  --tp-base-background-color: hsla(230, 7%, 12%, 0.72);
+  --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
+  --tp-button-background-color: hsla(230, 7%, 20%, 0.55);
+  --tp-button-background-color-active: hsla(230, 7%, 28%, 0.65);
+  --tp-button-background-color-focus: hsla(230, 7%, 24%, 0.6);
+  --tp-button-background-color-hover: hsla(230, 7%, 24%, 0.6);
+  --tp-button-foreground-color: hsla(0, 0%, 100%, 0.95);
+  --tp-container-foreground-color: hsla(0, 0%, 100%, 0.92);
+  --tp-input-background-color: hsla(230, 7%, 10%, 0.55);
+  --tp-input-background-color-active: hsla(230, 7%, 14%, 0.65);
+  --tp-input-background-color-focus: hsla(230, 7%, 12%, 0.6);
+  --tp-input-background-color-hover: hsla(230, 7%, 12%, 0.6);
+  --tp-input-foreground-color: hsla(0, 0%, 100%, 0.92);
+  --tp-label-foreground-color: hsla(0, 0%, 100%, 0.88);
+  --tp-monitor-background-color: hsla(230, 7%, 10%, 0.45);
+  --tp-monitor-foreground-color: hsla(0, 0%, 100%, 0.85);
+  --tp-groove-foreground-color: hsla(0, 0%, 100%, 0.18);
+
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  max-width: min(320px, 90vw);
+  height: 100vh;
+  z-index: 1001;
+  background: var(--tp-base-background-color);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: -4px 0 24px var(--tp-base-shadow-color);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: auto;
+}
+
+#side-panel.hidden {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#side-panel-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+}
+
+#side-panel-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+#side-panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#side-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+}
+
+#side-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+#side-panel .tp-dfwv {
+  position: relative !important;
+  top: 0 !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+#side-panel .tp-dfwv .tp-rotv {
+  width: 100% !important;
+  background-color: transparent !important;
+}
+
+#side-panel .tp-dfwv .tp-rotv_b {
+  background-color: transparent !important;
+}
+
+/* Mobile Tweakpane styles */
+@media (max-width: 768px) {
+  #side-panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 65vh;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  #side-panel.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}

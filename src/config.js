@@ -1,3 +1,7 @@
+import { EXR_ENVIRONMENTS } from "./exrEnvironments.generated.js";
+
+export { EXR_ENVIRONMENTS };
+
 /** Change these to switch the environment loaded on startup. */
 export const DEFAULT_ENV_FORMAT = "hdr";
 export const DEFAULT_ENV = "industrial_sunset";
@@ -25,9 +29,6 @@ export const HDR_ENVIRONMENTS = {
     file: "qwantani_night_puresky_1k.hdr",
   },
 };
-
-import { EXR_ENVIRONMENTS } from "./exrEnvironments.generated.js";
-export { EXR_ENVIRONMENTS };
 
 export const ENV_FORMAT_OPTIONS = { HDR: "hdr", EXR: "exr" };
 
@@ -92,4 +93,7 @@ export const MODEL_OPTIONS = [
   { text: "La quebrada de ocre profundo", value: "cart14" },
   { text: "Macizo del pez erosionado", value: "cart15" },
   { text: "Organic model", value: "organic_model" },
+    { text: "Art gallery 1", value: "art_gallery" },
+  { text: "Art gallery 2", value: "art_gallery1" },
+
 ];

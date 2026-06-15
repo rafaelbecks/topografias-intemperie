@@ -1,0 +1,111 @@
+{
+  "version": 5,
+  "params": {
+    "lightIntensity": 2.8,
+    "ambient": 1.391304347826087,
+    "exposure": 0.2891304347826087,
+    "roughness": 0.5,
+    "envFormat": "exr",
+    "environment": "img_7469",
+    "bgBlur": 0.05,
+    "moveSpeed": 1,
+    "fpMove": true,
+    "autoRotate": false,
+    "rotateSpeed": 0.6,
+    "debug": false,
+    "wireframe": false,
+    "model": "cart8"
+  },
+  "animation": {
+    "playing": true,
+    "motionType": "tectonic",
+    "amplitude": 0.165,
+    "frequency": 1.47,
+    "speed": 1.3,
+    "phaseSpread": 1.43,
+    "randomness": 0.73,
+    "axisX": 0.35,
+    "axisY": 1,
+    "axisZ": 0.25,
+    "selectionMode": "all",
+    "percentage": 10,
+    "seed": 59782,
+    "nthStep": 17,
+    "invertSelection": false,
+    "phaseMode": "index",
+    "radialBias": 1,
+    "heightBias": 0.6,
+    "showSelectedLayers": false
+  },
+  "grain": {
+    "enabled": true,
+    "animate": true,
+    "grainOpacity": 0.305,
+    "grainDensity": 3,
+    "patternWidth": 100,
+    "patternHeight": 100,
+    "grainWidth": 1,
+    "grainHeight": 1,
+    "grainChaos": 0.5,
+    "grainSpeed": 20
+  },
+  "text": {
+    "enabled": true,
+    "lineId": "cienaga",
+    "fontSize": 105,
+    "letterSpacing": 0.17,
+    "depth": 15,
+    "scale": 0.35,
+    "orbitSpeed": 0.08,
+    "wireframe": true,
+    "twisterSpeed": 0.4,
+    "twisterHeight": 300,
+    "twisterRadius": 300
+  },
+  "audio": {
+    "playing": true,
+    "envSound": "lanzarote",
+    "envVolume": 0.85,
+    "objectSound": "eterofono",
+    "objectVolume": 1,
+    "sensitivity": 1,
+    "loopFadeMs": 800
+  },
+  "ocean": {
+    "enabled": true,
+    "shape": "sphere",
+    "height": -4.5,
+    "sizeScale": 2.3,
+    "shapeSegments": 110,
+    "ovalRatio": 1.2999999999999998,
+    "noiseAmplitude": 1,
+    "noiseScale": 1.2,
+    "noiseSeed": 42,
+    "envelopeRadius": 5,
+    "torusTube": 0.30999999999999994,
+    "envelopeSide": "double",
+    "waterColor": "#1479ff",
+    "sunColor": "#ff5d00",
+    "sunElevation": 39.099999999999994,
+    "sunAzimuth": 137,
+    "distortionScale": 8,
+    "waveSize": 3.0000000000000004,
+    "alpha": 1
+  },
+  "scene": {
+    "environmentIntensity": 1.68,
+    "environmentRotationY": 0
+  },
+  "camera": {
+    "position": [
+      1.4377519856566272,
+      0.3412586442505457,
+      3.5123920927430237
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ]
+  }
+}

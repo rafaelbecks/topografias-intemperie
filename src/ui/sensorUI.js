@@ -1,21 +1,40 @@
-import { ROTATION_MODES, sensorParams } from "../sensor/sensorConfig.js";
+import { ROTATION_MODES, ROTATION_TARGETS, sensorParams } from "../sensor/sensorConfig.js";
 
 const ROTATION_MODE_OPTIONS = {
   Euler: ROTATION_MODES.EULER,
   Quaternion: ROTATION_MODES.QUATERNION,
 };
 
+const ROTATION_TARGET_OPTIONS = {
+  Camera: ROTATION_TARGETS.CAMERA,
+  Model: ROTATION_TARGETS.MODEL,
+};
+
 export function setupSensorUI(pane, { sensorClient, sensorController }) {
   const folder = pane.addFolder({ title: "Controller sensor", expanded: false });
 
-  folder.addBinding(sensorParams, "enabled", { label: "active" }).on("change", (e) => {
-    if (e.value) {
+  function applyActiveState(active) {
+    if (active) {
       sensorController.setActive(true);
       sensorClient.connect(sensorParams.url);
     } else {
       sensorClient.disconnect();
       sensorController.setActive(false);
     }
+  }
+
+  function setActive(active) {
+    sensorParams.enabled = active;
+    applyActiveState(active);
+    pane.refresh();
+  }
+
+  function toggleActive() {
+    setActive(!sensorParams.enabled);
+  }
+
+  folder.addBinding(sensorParams, "enabled", { label: "active" }).on("change", (e) => {
+    applyActiveState(e.value);
   });
 
   folder.addBinding(sensorParams, "url", { label: "websocket" });
@@ -26,30 +45,28 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
   });
 
   folder.addButton({ title: "Connect" }).on("click", () => {
-    sensorParams.enabled = true;
-    sensorController.setActive(true);
-    sensorClient.connect(sensorParams.url);
-    pane.refresh();
+    setActive(true);
   });
 
   folder.addButton({ title: "Disconnect" }).on("click", () => {
-    sensorParams.enabled = false;
-    sensorClient.disconnect();
-    sensorController.setActive(false);
-    pane.refresh();
+    setActive(false);
   });
 
   folder.addButton({ title: "Calibrate (zero pose)" }).on("click", () => {
     sensorController.calibrate(sensorClient.getState());
   });
 
-  folder.addButton({ title: "Reset model pose" }).on("click", () => {
+  folder.addButton({ title: "Reset pose" }).on("click", () => {
     sensorController.resetOrientation();
   });
 
   const mapping = folder.addFolder({ title: "Mapping", expanded: false });
 
   mapping.addBinding(sensorParams, "applyRotation", { label: "rotation" });
+  mapping.addBinding(sensorParams, "rotationTarget", {
+    label: "rotation target",
+    options: ROTATION_TARGET_OPTIONS,
+  });
   mapping.addBinding(sensorParams, "rotationMode", {
     label: "rotation mode",
     options: ROTATION_MODE_OPTIONS,
@@ -89,21 +106,28 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
     step: 0.01,
   });
 
-  const gestures = folder.addFolder({ title: "Gestures", expanded: false });
+  const distance = folder.addFolder({ title: "Distance (TF-Luna)", expanded: false });
 
-  gestures.addBinding(sensorParams, "gestureZoomEnabled", { label: "push / pull zoom" });
+  distance.addBinding(sensorParams, "distanceZoomEnabled", { label: "zoom" });
 
-  gestures.addBinding(sensorParams, "gestureZoomAmount", {
-    label: "zoom amount",
-    min: 1,
-    max: 40,
+  distance.addBinding(sensorParams, "distanceSensitivity", {
+    label: "sensitivity",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
+  distance.addBinding(sensorParams, "distanceThreshold", {
+    label: "threshold (cm)",
+    min: 0,
+    max: 20,
     step: 1,
   });
 
-  gestures.addBinding(sensorParams, "gestureZoomSmoothing", {
-    label: "zoom smoothing",
-    min: 0.02,
-    max: 0.5,
+  distance.addBinding(sensorParams, "distanceSmoothing", {
+    label: "smoothing",
+    min: 0.05,
+    max: 0.8,
     step: 0.01,
   });
 
@@ -113,6 +137,8 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
   nav.addBinding(sensorParams, "disableWalkWhileActive", { label: "lock WASD" });
 
   return {
+    setActive,
+    toggleActive,
     onStatus({ connected }) {
       sensorParams.connected = connected;
       pane.refresh();

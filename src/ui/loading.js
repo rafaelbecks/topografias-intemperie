@@ -1,8 +1,9 @@
 const LABELS = {
-  model: "Loading model",
-  environment: "Loading environment",
-  memory: "Loading memory",
-  text: "Rendering text",
+  model: "Reconstruyendo la topografía",
+  environment: "Imaginando el entorno",
+  memory: "Recuperando la memoria",
+  text: "Insistiendo en las palabras",
+  audio: "Dando vueltas a las voces",
 };
 
 /**

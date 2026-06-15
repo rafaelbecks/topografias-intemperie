@@ -1,257 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#111111" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<title>Cartografías Imposibles</title>
-<style>
-  body { margin: 0; overflow: hidden; background: #111; }
-
-  canvas {
-    display: block;
-  }
-
-  #position {
-    position: fixed;
-    bottom: 16px;
-    left: 16px;
-    font-family: monospace;
-    font-size: 11px;
-    color: rgba(255,255,255,0.75);
-    background: rgba(0,0,0,0.45);
-    padding: 8px 12px;
-    border-radius: 6px;
-    pointer-events: none;
-    line-height: 1.6;
-    z-index: 999;
-  }
-
-  #loading {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 998;
-  }
-
-  #loading[hidden] {
-    display: none !important;
-  }
-
-  .loading-card {
-    font-family: system-ui, -apple-system, sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(0, 0, 0, 0.45);
-    padding: 14px 18px;
-    border-radius: 6px;
-    min-width: 180px;
-    text-align: center;
-  }
-
-  .loading-label {
-    margin: 0 0 10px;
-    letter-spacing: 0.02em;
-  }
-
-  .loading-track {
-    position: relative;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 1px;
-    overflow: hidden;
-  }
-
-  .loading-bar {
-    height: 100%;
-    width: 0%;
-    background: rgba(255, 255, 255, 0.55);
-    border-radius: 1px;
-    transition: width 0.15s ease-out;
-  }
-
-  .loading-bar--indeterminate {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 35% !important;
-    transition: none;
-    animation: loading-slide 1.1s ease-in-out infinite;
-  }
-
-  @keyframes loading-slide {
-    0% { transform: translateX(-120%); }
-    100% { transform: translateX(320%); }
-  }
-
-  #panel-toggle {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 1002;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    mix-blend-mode: difference;
-    pointer-events: auto;
-  }
-
-  #panel-toggle[aria-expanded="true"] {
-    display: none;
-  }
-
-  #panel-toggle img {
-    width: 24px;
-    height: 24px;
-    display: block;
-  }
-
-  #side-panel {
-    --tp-base-background-color: hsla(230, 7%, 12%, 0.72);
-    --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
-    --tp-button-background-color: hsla(230, 7%, 20%, 0.55);
-    --tp-button-background-color-active: hsla(230, 7%, 28%, 0.65);
-    --tp-button-background-color-focus: hsla(230, 7%, 24%, 0.6);
-    --tp-button-background-color-hover: hsla(230, 7%, 24%, 0.6);
-    --tp-button-foreground-color: hsla(0, 0%, 100%, 0.95);
-    --tp-container-foreground-color: hsla(0, 0%, 100%, 0.92);
-    --tp-input-background-color: hsla(230, 7%, 10%, 0.55);
-    --tp-input-background-color-active: hsla(230, 7%, 14%, 0.65);
-    --tp-input-background-color-focus: hsla(230, 7%, 12%, 0.6);
-    --tp-input-background-color-hover: hsla(230, 7%, 12%, 0.6);
-    --tp-input-foreground-color: hsla(0, 0%, 100%, 0.92);
-    --tp-label-foreground-color: hsla(0, 0%, 100%, 0.88);
-    --tp-monitor-background-color: hsla(230, 7%, 10%, 0.45);
-    --tp-monitor-foreground-color: hsla(0, 0%, 100%, 0.85);
-    --tp-groove-foreground-color: hsla(0, 0%, 100%, 0.18);
-
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 280px;
-    max-width: min(280px, 90vw);
-    height: 100vh;
-    z-index: 1001;
-    background: var(--tp-base-background-color);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    box-shadow: -4px 0 24px var(--tp-base-shadow-color);
-    transition: transform 0.2s ease, opacity 0.2s ease;
-    pointer-events: auto;
-  }
-
-  #side-panel.hidden {
-    transform: translateX(100%);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  #side-panel-scroll {
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
-  }
-
-  #side-panel-scroll::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  #side-panel-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  #side-panel-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.45);
-    border-radius: 4px;
-  }
-
-  #side-panel-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.6);
-  }
-
-  #side-panel .tp-dfwv {
-    position: relative !important;
-    top: 0 !important;
-    right: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background-color: transparent !important;
-  }
-
-  #side-panel .tp-dfwv .tp-rotv {
-    width: 100% !important;
-    background-color: transparent !important;
-  }
-
-  #side-panel .tp-dfwv .tp-rotv_b {
-    background-color: transparent !important;
-  }
-
-  /* Mobile Tweakpane styles */
-  @media (max-width: 768px) {
-    #side-panel {
-      top: auto;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-      max-height: 65vh;
-      border-radius: 12px 12px 0 0;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    }
-
-    #side-panel.hidden {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-  }
-</style>
-</head>
-<body>
-
-<script src="./lib/grained.js"></script>
-
 <script type="importmap">
 {
   "imports": {
     "three": "https://esm.sh/three@0.182.0",
     "three/addons/": "https://esm.sh/three@0.182.0/addons/",
     "tweakpane": "https://esm.sh/tweakpane@4.0.5",
+    "howler": "https://esm.sh/howler@2.2.4",
     "three-text": "./lib/three-text/three/index.js",
     "woff-lib/woff2/decode": "./lib/woff-lib/woff2-decode.js",
     "brotli-lib/decode": "./lib/brotli-lib/decode.js"
   }
 }
 </script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#ffffff" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon192.png" />
+<title>topografías de la intemperie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Ovo&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
 
+<script src="./lib/grained.js"></script>
 <script type="module" src="./src/main.js"></script>
 
-<button id="panel-toggle" type="button" aria-label="Open controls" aria-expanded="false" aria-controls="side-panel">
+<button id="panel-toggle" type="button" aria-label="Open controls" aria-expanded="false" aria-controls="side-panel" hidden>
   <img src="./icons/shapes-outline.svg" alt="" width="24" height="24" />
 </button>
 
-<aside id="side-panel">
+<aside id="side-panel" class="hidden">
   <div id="side-panel-scroll"></div>
 </aside>
 
@@ -265,5 +50,39 @@
     </div>
   </div>
 </section>
+
+<svg style="position: absolute; width: 0; height: 0" aria-hidden="true">
+  <defs>
+    <filter
+      id="ditherFilter"
+      color-interpolation-filters="sRGB"
+      x="0"
+      y="0"
+      width="100%"
+      height="100%"
+    >
+      <feFlood flood-color="#000000" flood-opacity="0.50" x="0%" y="0%" result="flood" />
+      <feBlend mode="normal" x="0%" y="0%" in="SourceGraphic" in2="flood" result="blend1" />
+      <feImage
+        class="ditherImage"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAA5ElEQVQYlQXBgQbCUABA0fdrk0ySSZJJkiRJMjOTTGZmkiRJZiYzyczMzGQmfdrtHPH7/TgcDuR5zna7pWka9vs9aZqyXq8R0+mU5/OJoihcLhfG4zFBENDtdjmdToj3+81yueTz+WCaJnEcM5/PKcsSXdcRsizjeR6j0YjH40Gr1cJxHAaDAbfbDVHXNbvdjiRJWK1WfL9fLMsiyzI2mw1CVVV836fT6XA8HplMJoRhSK/X43w+I6IoYjabURQFmqbxer1YLBZUVYVhGAhJkrBtm36/z/V6pd1u47ouw+GQ+/3OH4/Fn8FvF/NxAAAAAElFTkSuQmCC"
+        x="0"
+        y="0"
+        width="4"
+        height="4"
+        crossorigin="anonymous"
+        result="image1"
+      />
+      <feTile x="0" y="0" in="image1" result="tile" />
+      <feBlend mode="overlay" x="0%" y="0%" in="blend1" in2="tile" result="blend2" />
+      <feColorMatrix type="saturate" values="1" />
+      <feComponentTransfer>
+        <feFuncR type="discrete" tableValues="0 1" />
+        <feFuncG type="discrete" tableValues="0 1" />
+        <feFuncB type="discrete" tableValues="0 1" />
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>

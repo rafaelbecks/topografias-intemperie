@@ -1,0 +1,124 @@
+{
+  "version": 5,
+  "params": {
+    "lightIntensity": 2.8,
+    "ambient": 1.934782608695652,
+    "exposure": 0.32065217391304346,
+    "roughness": 0.5,
+    "envFormat": "exr",
+    "environment": "exr_7",
+    "bgBlur": 0.13,
+    "moveSpeed": 5,
+    "fpMove": true,
+    "autoRotate": false,
+    "rotateSpeed": 0.6,
+    "debug": false,
+    "wireframe": false,
+    "model": "cart10"
+  },
+  "animation": {
+    "playing": true,
+    "motionType": "sine",
+    "amplitude": 0.19,
+    "frequency": 0.7100000000000001,
+    "speed": 0.9400000000000001,
+    "phaseSpread": 1.3900000000000001,
+    "randomness": 0.34,
+    "axisX": 0.35,
+    "axisY": 1,
+    "axisZ": 0.25,
+    "selectionMode": "percentage",
+    "percentage": 100,
+    "seed": 42,
+    "nthStep": 3,
+    "invertSelection": false,
+    "phaseMode": "index",
+    "radialBias": 1,
+    "heightBias": 0.6,
+    "showSelectedLayers": false
+  },
+  "grain": {
+    "enabled": true,
+    "animate": true,
+    "grainOpacity": 0.305,
+    "grainDensity": 3,
+    "patternWidth": 100,
+    "patternHeight": 100,
+    "grainWidth": 1,
+    "grainHeight": 1,
+    "grainChaos": 0.5,
+    "grainSpeed": 20
+  },
+  "dither": {
+    "enabled": false,
+    "saturate": 1,
+    "tableValuesR": 0,
+    "tableValuesG": 0,
+    "tableValuesB": 0
+  },
+  "text": {
+    "enabled": true,
+    "lineId": "ventanas",
+    "fontSize": 105,
+    "letterSpacing": 0.17,
+    "depth": 24,
+    "scale": 0.95,
+    "orbitSpeed": 0.08,
+    "wireframe": true,
+    "twisterSpeed": 0.4,
+    "twisterHeight": 300,
+    "twisterRadius": 300
+  },
+  "audio": {
+    "playing": false,
+    "envSound": "lluvia_bogota",
+    "envVolume": 0.35,
+    "objectSound": "campana_bogotana",
+    "objectVolume": 1,
+    "sensitivity": 1,
+    "loopFadeMs": 800
+  },
+  "ocean": {
+    "enabled": true,
+    "shape": "torusknot",
+    "height": -20,
+    "sizeScale": 2.6999999999999997,
+    "shapeSegments": 128,
+    "ovalRatio": 1.5,
+    "noiseAmplitude": 0.35,
+    "noiseScale": 1.2,
+    "noiseSeed": 42,
+    "envelopeRadius": 2.15,
+    "torusTube": 0.35,
+    "torusKnotRadius": 1.05,
+    "torusKnotTube": 0.19,
+    "torusKnotTubularSegments": 463,
+    "torusKnotRadialSegments": 51,
+    "torusKnotP": 2,
+    "torusKnotQ": 4,
+    "envelopeSide": "double",
+    "waterColor": "#0dd934",
+    "sunColor": "#f2fff2",
+    "sunElevation": 50.9,
+    "sunAzimuth": 23.499999999999993,
+    "distortionScale": 8,
+    "waveSize": 9.700000000000001,
+    "alpha": 1
+  },
+  "scene": {
+    "environmentIntensity": 0.8200000000000001,
+    "environmentRotationY": 0
+  },
+  "camera": {
+    "position": [
+      1.8402280363833312,
+      0.051790080533249384,
+      3.9388710264370044
+    ],
+    "target": [
+      1.6550789949092908,
+      0,
+      3.3859838831190716
+    ]
+  }
+}

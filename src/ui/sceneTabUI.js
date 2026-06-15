@@ -7,6 +7,7 @@ import {
   MODEL_OPTIONS,
   params,
 } from "../config.js";
+import { setupOceanUI } from "../ocean/oceanUI.js";
 
 /**
  * Scene tab controls grouped into Tweakpane folders.
@@ -148,6 +149,10 @@ export function setupSceneTabUI(page, ctx) {
   debugFolder.addBinding(params, "debug", { label: "show position" }).on("change", (e) => {
     document.getElementById("position").style.display = e.value ? "block" : "none";
   });
+
+  if (ctx.oceanSystem) {
+    setupOceanUI(page, ctx.oceanSystem);
+  }
 
   return {
     modelBlade,
