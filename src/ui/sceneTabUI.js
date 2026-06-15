@@ -7,11 +7,18 @@ import {
   MODEL_OPTIONS,
   params,
 } from "../config.js";
+import { isNoModel } from "../modelUtils.js";
 import { setupOceanUI } from "../ocean/oceanUI.js";
+import { setupParticleUI } from "../particles/particleUI.js";
+
+const MODEL_BINDING_OPTIONS = Object.fromEntries([
+  ["None (text only)", "none"],
+  ...MODEL_OPTIONS.map(({ text, value }) => [text, value]),
+]);
 
 /**
  * Scene tab controls grouped into Tweakpane folders.
- * @returns {{ modelBlade, setupEnvironmentControl, refreshModelBlade }}
+ * @returns {{ setupEnvironmentControl, refreshModelBlade }}
  */
 export function setupSceneTabUI(page, ctx) {
   const {
@@ -26,8 +33,9 @@ export function setupSceneTabUI(page, ctx) {
     input,
   } = ctx;
 
-  let modelBlade;
+  let modelBinding;
   let envBinding;
+  let lastEnvFormat = params.envFormat;
 
   function reloadEnvironment() {
     const path = getEnvPath(params.environment, params.envFormat);
@@ -39,24 +47,24 @@ export function setupSceneTabUI(page, ctx) {
     if (!environments[params.environment]) {
       params.environment = getDefaultEnvId(params.envFormat);
     }
-    if (envBinding) envBinding.dispose();
-    envBinding = envFolder
-      .addBinding(params, "environment", { options: getEnvOptions(params.envFormat) })
-      .on("change", reloadEnvironment);
+    if (params.envFormat !== lastEnvFormat || !envBinding) {
+      if (envBinding) envBinding.dispose();
+      envBinding = envFolder
+        .addBinding(params, "environment", { options: getEnvOptions(params.envFormat) })
+        .on("change", reloadEnvironment);
+      lastEnvFormat = params.envFormat;
+    }
   }
 
   // — Model —
   const modelFolder = page.addFolder({ title: "Model", expanded: true });
 
-  modelBlade = modelFolder
-    .addBlade({
-      view: "list",
+  modelBinding = modelFolder
+    .addBinding(params, "model", {
       label: "terrain",
-      options: MODEL_OPTIONS,
-      value: params.model,
+      options: MODEL_BINDING_OPTIONS,
     })
     .on("change", (e) => {
-      params.model = e.value;
       loadModel(e.value);
     });
 
@@ -67,6 +75,10 @@ export function setupSceneTabUI(page, ctx) {
   modelFolder.addBinding(params, "wireframe", { label: "wireframe" }).on("change", (e) => {
     modelLoader.setWireframe(e.value);
   });
+
+  if (ctx.particleSystem) {
+    setupParticleUI(modelFolder, ctx.particleSystem);
+  }
 
   // — Environment —
   const envFolder = page.addFolder({ title: "Environment", expanded: true });
@@ -155,10 +167,12 @@ export function setupSceneTabUI(page, ctx) {
   }
 
   return {
-    modelBlade,
     setupEnvironmentControl,
     refreshModelBlade() {
-      if (modelBlade) modelBlade.value = params.model;
+      if (isNoModel(params.model)) {
+        params.model = "none";
+      }
+      modelBinding?.refresh();
     },
   };
 }

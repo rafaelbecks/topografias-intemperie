@@ -1,5 +1,10 @@
 /** Poem lines selectable in the Text tab. */
 export const TEXT_LINES = [
+  {
+    id: "front",
+    label: "topografías de la intemperie",
+    text: "topografías\nde  la\nintemperie",
+  },
   { id: "delirio", label: "Ya el delirio no me solicita.", text: "Ya el delirio no me solicita." },
   {
     id: "tension",
@@ -50,5 +55,9 @@ export function getTextById(id) {
 export const DEFAULT_PAGE_TITLE = "topografías de la intemperie";
 
 export function syncPageTitle(lineId) {
+  if (lineId === "front") {
+    document.title = DEFAULT_PAGE_TITLE;
+    return;
+  }
   document.title = getTextById(lineId) || DEFAULT_PAGE_TITLE;
 }

@@ -111,10 +111,12 @@ export function createSceneSystem({ loading } = {}) {
     ambient.intensity = params.ambient;
   }
 
+  let setViewportSize = (width, height) => renderer.setSize(width, height);
+
   function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    setViewportSize(window.innerWidth, window.innerHeight);
   }
 
   window.addEventListener("resize", onResize);
@@ -128,5 +130,8 @@ export function createSceneSystem({ loading } = {}) {
     ambient,
     loadEnvironment,
     clearEnvironment,
+    setViewportSize(fn) {
+      setViewportSize = fn;
+    },
   };
 }

@@ -1,10 +1,10 @@
 {
-  "version": 5,
+  "version": 6,
   "params": {
-    "lightIntensity": 2.8,
-    "ambient": 1.52,
+    "lightIntensity": 0,
+    "ambient": 0.6521739130434783,
     "exposure": 0.2891304347826087,
-    "roughness": 0.5,
+    "roughness": 0.45652173913043476,
     "envFormat": "exr",
     "environment": "exr_6",
     "bgBlur": 0.13,
@@ -14,12 +14,12 @@
     "rotateSpeed": 0.6,
     "debug": false,
     "wireframe": false,
-    "model": "cart8"
+    "model": "cart4"
   },
   "animation": {
     "playing": true,
     "motionType": "tectonic",
-    "amplitude": 0.5,
+    "amplitude": 0.05499999999999999,
     "frequency": 1.47,
     "speed": 1.3,
     "phaseSpread": 1.43,
@@ -90,6 +90,12 @@
     "noiseSeed": 42,
     "envelopeRadius": 2.5,
     "torusTube": 0.35,
+    "torusKnotRadius": 1,
+    "torusKnotTube": 0.4,
+    "torusKnotTubularSegments": 128,
+    "torusKnotRadialSegments": 16,
+    "torusKnotP": 2,
+    "torusKnotQ": 3,
     "envelopeSide": "double",
     "waterColor": "#001e0f",
     "sunColor": "#ffffff",
@@ -99,15 +105,24 @@
     "waveSize": 1,
     "alpha": 1
   },
+  "particles": {
+    "enabled": false,
+    "useModelColors": true,
+    "color": "#c8a0b0",
+    "luminance": 1,
+    "count": 150000,
+    "size": 6.15,
+    "opacity": 0.85
+  },
   "scene": {
     "environmentIntensity": 1.36,
     "environmentRotationY": 0
   },
   "camera": {
     "position": [
-      -3.6389928370849765,
-      1.004661380350647,
-      -3.25034921928788
+      1.277145288109176,
+      1.6299419446684613,
+      -0.6911236832827883
     ],
     "target": [
       0,

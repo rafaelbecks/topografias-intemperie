@@ -3,7 +3,7 @@
   "params": {
     "lightIntensity": 2.8,
     "ambient": 1.391304347826087,
-    "exposure": 0.2891304347826087,
+    "exposure": 0.23,
     "roughness": 0.5,
     "envFormat": "exr",
     "environment": "img_7469",
@@ -64,10 +64,10 @@
   },
   "audio": {
     "playing": true,
-    "envSound": "lanzarote",
-    "envVolume": 0.85,
+    "envSound": "delirio",
+    "envVolume": 0.5,
     "objectSound": "eterofono",
-    "objectVolume": 1,
+    "objectVolume": 0,
     "sensitivity": 1,
     "loopFadeMs": 800
   },

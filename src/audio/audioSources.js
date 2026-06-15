@@ -13,6 +13,22 @@ export const ENV_SOUNDS = {
     label: "Intemperie",
     file: "intemperie.wav",
   },
+  delirio: {
+    label: "Delirio",
+    file: "delirio.wav",
+  },
+  espectro: {
+    label: "Espectro",
+    file: "espectro.wav",
+  },
+  aves: {
+    label: "Aves",
+    file: "aves.wav",
+  },
+  eterofono: {
+    label: "Eterófono",
+    file: "eterófono.wav",
+  },
 };
 
 export const OBJECT_SOUNDS = {

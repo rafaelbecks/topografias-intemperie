@@ -4,6 +4,7 @@ import { captureState, downloadState, loadStateFromFile } from "./state.js";
 import { setupAnimationUI } from "./terrain/animationUI.js";
 import { setupGrainUI } from "./grain/grainUI.js";
 import { setupDitherUI } from "./dither/ditherUI.js";
+import { setupStereoUI } from "./stereo/stereoUI.js";
 import { setupSceneTabUI } from "./ui/sceneTabUI.js";
 import { setupPaneToggle } from "./ui/paneToggle.js";
 import { setupScenesUI } from "./ui/scenesUI.js";
@@ -12,6 +13,8 @@ import { setupSensorUI } from "./ui/sensorUI.js";
 import { setupKeyboardShortcuts } from "./ui/keyboardShortcuts.js";
 import { setupTextUI } from "./text/textUI.js";
 import { setupAudioUI } from "./audio/audioUI.js";
+import { particleParams } from "./particles/particleParams.js";
+import { FRONT_SCENE, SCENE_ORDER } from "./scenes.js";
 
 export function createUI(ctx) {
   const { loadModel, loadEnvironment, scene, camera, controls, terrainAnimation, grainOverlay } =
@@ -87,18 +90,24 @@ export function createUI(ctx) {
   const sceneTab = setupSceneTabUI(scenePage, ctx);
 
   function refresh() {
-    pane.refresh();
-    sceneTab.refreshModelBlade();
     sceneTab.setupEnvironmentControl();
+    sceneTab.refreshModelBlade();
+    pane.refresh();
     grainOverlay.sync();
     ctx.ditherOverlay?.sync();
     ctx.oceanSystem?.sync();
+    ctx.particleSystem?.sync();
+    ctx.stereoEffects?.sync();
   }
 
   setupAnimationUI(animationPage, terrainAnimation, pane);
   setupGrainUI(pane, grainOverlay);
   if (ctx.ditherOverlay) {
     setupDitherUI(pane, ctx.ditherOverlay);
+  }
+
+  if (ctx.stereoEffects) {
+    setupStereoUI(pane, ctx.stereoEffects);
   }
 
   if (ctx.textOverlay) {
@@ -120,8 +129,20 @@ export function createUI(ctx) {
   }
 
   setupKeyboardShortcuts({
-    audioSystem: ctx.audioSystem,
     toggleSensorActive: sensorUI.toggleActive,
+    toggleWireframe: () => {
+      params.wireframe = !params.wireframe;
+      ctx.modelLoader.setWireframe(params.wireframe);
+      refresh();
+    },
+    toggleParticles: () => {
+      particleParams.enabled = !particleParams.enabled;
+      ctx.particleSystem?.sync();
+      refresh();
+    },
+    frontScene: FRONT_SCENE,
+    sceneOrder: SCENE_ORDER,
+    onSceneSelect: (name) => scenesUI.loadScene(name),
   });
 
   return { pane, refresh, reloadEnvironment, sensorUI, paneToggle, scenesUI };

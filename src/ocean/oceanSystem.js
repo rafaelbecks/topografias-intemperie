@@ -12,7 +12,12 @@ import {
 const WATER_NORMALS_URL = "./textures/waternormals.jpg";
 
 function getWaterSide() {
+  // Flat shapes like plane / noise should be visible from above and
+  // below so that exploring from underneath still shows the surface.
   if (!ENVELOPE_SHAPES.has(oceanParams.shape)) {
+    if (oceanParams.shape === "plane" || oceanParams.shape === "noise") {
+      return THREE.DoubleSide;
+    }
     return THREE.FrontSide;
   }
   switch (oceanParams.envelopeSide) {

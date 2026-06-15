@@ -1,5 +1,6 @@
 import {
   ensureDirPermission,
+  FRONT_SCENE,
   listJsonFiles,
   loadSceneByName,
   loadSceneFromHandle,
@@ -13,11 +14,14 @@ import {
  * @returns {{ currentScene: string, refreshSceneList: Function }}
  */
 export function setupScenesUI(folder, ctx) {
-  let currentScene = SCENE_ORDER[0];
+  const sceneState = { scene: FRONT_SCENE };
+  let currentScene = FRONT_SCENE;
   let dirHandle = null;
   let fileHandles = new Map();
 
-  const sceneOptions = Object.fromEntries(SCENE_ORDER.map((name) => [name, name]));
+  const sceneOptions = Object.fromEntries(
+    [FRONT_SCENE, ...SCENE_ORDER].map((name) => [name, name])
+  );
   if (!sceneOptions[currentScene]) {
     sceneOptions[currentScene] = currentScene;
   }
@@ -25,8 +29,9 @@ export function setupScenesUI(folder, ctx) {
 
   function rebuildSceneBinding() {
     if (sceneBinding) sceneBinding.dispose();
+    sceneState.scene = currentScene;
     sceneBinding = folder
-      .addBinding({ scene: currentScene }, "scene", {
+      .addBinding(sceneState, "scene", {
         label: "scene",
         options: sceneOptions,
       })
@@ -44,6 +49,7 @@ export function setupScenesUI(folder, ctx) {
         await loadSceneByName(name, ctx);
       }
       currentScene = name;
+      sceneState.scene = name;
       sceneBinding?.refresh();
     } catch (err) {
       console.error(err);
@@ -64,7 +70,7 @@ export function setupScenesUI(folder, ctx) {
     }
 
     if (!sceneOptions[currentScene]) {
-      currentScene = handles[0]?.name ?? SCENE_ORDER[0];
+      currentScene = handles[0]?.name ?? FRONT_SCENE;
       if (!sceneOptions[currentScene]) {
         sceneOptions[currentScene] = currentScene;
       }

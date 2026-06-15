@@ -7,12 +7,15 @@ import { createTerrainAnimation } from "./terrain/terrainAnimation.js";
 import { createGrainOverlay } from "./grain/grainOverlay.js";
 import { createDitherOverlay } from "./dither/ditherOverlay.js";
 import { createLoading } from "./ui/loading.js";
+import { createSceneFreeze } from "./ui/sceneFreeze.js";
 import { createSensorClient } from "./sensor/sensorClient.js";
 import { createSensorController } from "./sensor/sensorController.js";
 import { sensorParams } from "./sensor/sensorConfig.js";
 import { createTextOverlay } from "./text/textOverlay.js";
 import { createAudioSystem } from "./audio/audioSystem.js";
 import { createOceanSystem } from "./ocean/oceanSystem.js";
+import { createParticleSystem } from "./particles/particleSystem.js";
+import { createStereoEffects } from "./stereo/stereoEffects.js";
 
 export async function bootSceneViewer(sceneName) {
   document.body.classList.remove("front-page");
@@ -25,10 +28,26 @@ export async function bootSceneViewer(sceneName) {
 
   const sceneSystem = createSceneSystem({ loading });
 
-  const { scene, camera, renderer, controls, light, ambient, loadEnvironment, clearEnvironment } =
-    sceneSystem;
+  const {
+    scene,
+    camera,
+    renderer,
+    controls,
+    light,
+    ambient,
+    loadEnvironment,
+    clearEnvironment,
+    setViewportSize,
+  } = sceneSystem;
+
+  const stereoEffects = createStereoEffects(renderer);
+  setViewportSize(stereoEffects.setSize);
+
+  let hasRendered = false;
+  const sceneFreeze = createSceneFreeze(renderer, { canCapture: () => hasRendered });
 
   const terrainAnimation = createTerrainAnimation();
+  const particleSystem = createParticleSystem();
   const grainOverlay = createGrainOverlay();
   const ditherOverlay = createDitherOverlay(renderer);
   const input = createInputSystem(camera, controls);
@@ -47,6 +66,7 @@ export async function bootSceneViewer(sceneName) {
     loading,
     onModelLoaded: (model) => {
       terrainAnimation.bindModel(model);
+      particleSystem.bindModel(model);
       oceanSystem.bindModel();
       oceanSystem.sync();
       textOverlay.syncTransform();
@@ -95,6 +115,9 @@ export async function bootSceneViewer(sceneName) {
     textOverlay,
     audioSystem,
     oceanSystem,
+    particleSystem,
+    stereoEffects,
+    sceneFreeze,
   });
 
   const posEl = document.getElementById("position");
@@ -113,7 +136,8 @@ export async function bootSceneViewer(sceneName) {
     controls.update();
     audioSystem.update();
     oceanSystem.update(delta);
-    renderer.render(scene, camera);
+    stereoEffects.render(scene, camera);
+    hasRendered = true;
     ditherOverlay.update();
 
     const p = camera.position;

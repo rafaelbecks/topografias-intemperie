@@ -1,4 +1,5 @@
 import { getDefaultEnvId, getEnvironments, params } from "./config.js";
+import { isNoModel } from "./modelUtils.js";
 import { AUDIO_PARAM_KEYS, audioParams } from "./audio/audioParams.js";
 import {
   DEFAULT_ENV_SOUND,
@@ -8,8 +9,9 @@ import {
 } from "./audio/audioSources.js";
 import { GRAIN_PARAM_KEYS, grainParams } from "./grain/grainParams.js";
 import { DITHER_PARAM_KEYS, ditherParams } from "./dither/ditherParams.js";
+import { STEREO_PARAM_KEYS, stereoParams } from "./stereo/stereoParams.js";
 import { DEFAULT_PAGE_TITLE, syncPageTitle, TEXT_LINES } from "./text/textLines.js";
-import { TEXT_PARAM_KEYS, textParams } from "./text/textParams.js";
+import { DEFAULT_TEXT_PARAMS, TEXT_PARAM_KEYS, textParams, ANIMATION_MODES } from "./text/textParams.js";
 import {
   ANIMATION_PARAM_KEYS,
   MOTION_TYPES,
@@ -18,9 +20,14 @@ import {
   animationParams,
 } from "./terrain/animationParams.js";
 import { clampOceanParams, OCEAN_PARAM_KEYS, oceanParams } from "./ocean/oceanParams.js";
+import {
+  clampParticleParams,
+  PARTICLE_PARAM_KEYS,
+  particleParams,
+} from "./particles/particleParams.js";
 
-export const STATE_VERSION = 5;
-const SUPPORTED_VERSIONS = [1, 2, 3, 4, 5];
+export const STATE_VERSION = 7;
+const SUPPORTED_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
 
 const PARAM_KEYS = [
   "lightIntensity",
@@ -59,6 +66,10 @@ function pickDitherParams(source = {}) {
   return pickParams(source, DITHER_PARAM_KEYS);
 }
 
+function pickStereoParams(source = {}) {
+  return pickParams(source, STEREO_PARAM_KEYS);
+}
+
 function pickTextParams(source = {}) {
   return pickParams(source, TEXT_PARAM_KEYS);
 }
@@ -69,6 +80,10 @@ function pickAudioParams(source = {}) {
 
 function pickOceanParams(source = {}) {
   return pickParams(source, OCEAN_PARAM_KEYS);
+}
+
+function pickParticleParams(source = {}) {
+  return pickParams(source, PARTICLE_PARAM_KEYS);
 }
 
 function clampAudioParams() {
@@ -84,6 +99,9 @@ function clampTextParams() {
   const validIds = TEXT_LINES.map((line) => line.id);
   if (!validIds.includes(textParams.lineId)) {
     textParams.lineId = validIds[0];
+  }
+  if (!ANIMATION_MODES.includes(textParams.animationMode)) {
+    textParams.animationMode = ANIMATION_MODES[0];
   }
 }
 
@@ -122,7 +140,18 @@ function applyDitherState(dither) {
   }
 }
 
+function applyStereoState(stereo) {
+  if (!stereo) return;
+  for (const key of STEREO_PARAM_KEYS) {
+    if (stereo[key] !== undefined) stereoParams[key] = stereo[key];
+  }
+  if (stereoParams.anaglyphEnabled && stereoParams.parallaxBarrierEnabled) {
+    stereoParams.parallaxBarrierEnabled = false;
+  }
+}
+
 function applyTextState(text) {
+  Object.assign(textParams, DEFAULT_TEXT_PARAMS);
   if (!text) return;
   for (const key of TEXT_PARAM_KEYS) {
     if (text[key] !== undefined) textParams[key] = text[key];
@@ -146,16 +175,48 @@ function applyOceanState(ocean) {
   clampOceanParams();
 }
 
-export function captureState({ scene, camera, controls }) {
+function applyParticleState(particles) {
+  if (!particles) return;
+  for (const key of PARTICLE_PARAM_KEYS) {
+    if (particles[key] !== undefined) particleParams[key] = particles[key];
+  }
+  clampParticleParams();
+}
+
+let storedInitialCamera = null;
+
+function pickCameraState(source) {
+  if (!source?.position || !source?.target) return null;
   return {
+    position: [...source.position],
+    target: [...source.target],
+  };
+}
+
+function applyCameraState(cameraState, ctx) {
+  if (!cameraState) return;
+  ctx.camera.position.fromArray(cameraState.position);
+  ctx.controls.target.fromArray(cameraState.target);
+  ctx.controls.update();
+}
+
+export function captureState({ scene, camera, controls }) {
+  const state = {
     version: STATE_VERSION,
-    params: Object.fromEntries(PARAM_KEYS.map((key) => [key, params[key]])),
+    params: Object.fromEntries(
+      PARAM_KEYS.map((key) => [
+        key,
+        key === "model" && isNoModel(params.model) ? null : params[key],
+      ])
+    ),
     animation: pickAnimationParams(animationParams),
     grain: pickGrainParams(grainParams),
     dither: pickDitherParams(ditherParams),
+    stereo: pickStereoParams(stereoParams),
     text: pickTextParams(textParams),
     audio: pickAudioParams(audioParams),
     ocean: pickOceanParams(oceanParams),
+    particles: pickParticleParams(particleParams),
     scene: {
       environmentIntensity: scene.environmentIntensity,
       environmentRotationY: scene.environmentRotation.y,
@@ -165,6 +226,12 @@ export function captureState({ scene, camera, controls }) {
       target: controls.target.toArray(),
     },
   };
+
+  if (storedInitialCamera) {
+    state.initialCamera = storedInitialCamera;
+  }
+
+  return state;
 }
 
 export async function applyState(state, ctx, { silent = false } = {}) {
@@ -174,9 +241,21 @@ export async function applyState(state, ctx, { silent = false } = {}) {
     );
   }
 
+  ctx.sceneFreeze?.capture();
+
+  try {
+    return await applyStateInner(state, ctx, { silent });
+  } finally {
+    await ctx.sceneFreeze?.release();
+  }
+}
+
+async function applyStateInner(state, ctx, { silent = false } = {}) {
   const p = state.params ?? {};
   for (const key of PARAM_KEYS) {
-    if (p[key] !== undefined) params[key] = p[key];
+    if (p[key] !== undefined) {
+      params[key] = key === "model" && isNoModel(p[key]) ? "none" : p[key];
+    }
   }
 
   const environments = getEnvironments(params.envFormat);
@@ -202,13 +281,7 @@ export async function applyState(state, ctx, { silent = false } = {}) {
   ctx.modelLoader.setWireframe(params.wireframe);
   ctx.input.resetMoveState();
 
-  if (state.camera?.position) {
-    ctx.camera.position.fromArray(state.camera.position);
-  }
-  if (state.camera?.target) {
-    ctx.controls.target.fromArray(state.camera.target);
-    ctx.controls.update();
-  }
+  storedInitialCamera = pickCameraState(state.initialCamera);
 
   if (state.version >= 2) {
     applyAnimationState(state.animation);
@@ -218,6 +291,9 @@ export async function applyState(state, ctx, { silent = false } = {}) {
   }
   if (state.dither) {
     applyDitherState(state.dither);
+  }
+  if (state.stereo) {
+    applyStereoState(state.stereo);
   }
   if (state.version >= 3 && state.text) {
     applyTextState(state.text);
@@ -236,18 +312,30 @@ export async function applyState(state, ctx, { silent = false } = {}) {
   } else {
     oceanParams.enabled = false;
   }
+  if (state.version >= 6 && state.particles) {
+    applyParticleState(state.particles);
+  } else {
+    particleParams.enabled = false;
+  }
 
-  ctx.ui.refresh();
   ctx.grainOverlay?.sync();
   ctx.ditherOverlay?.sync();
-  ctx.oceanSystem?.sync();
+  ctx.stereoEffects?.sync();
   ctx.audioSystem?.stop({ preserveIntent: true });
 
-  const loadOpts = { silent };
-  await Promise.all([
-    ctx.loadModel(params.model, loadOpts),
-    ctx.reloadEnvironment(loadOpts),
-  ]);
+  const loadOpts = { silent, skipIntro: !!storedInitialCamera };
+  const loadTasks = [ctx.reloadEnvironment(loadOpts)];
+  if (!isNoModel(params.model)) {
+    loadTasks.push(ctx.loadModel(params.model, loadOpts));
+  } else {
+    loadTasks.push(ctx.loadModel("none", loadOpts));
+  }
+  await Promise.all(loadTasks);
+
+  if (storedInitialCamera) {
+    applyCameraState(storedInitialCamera, ctx);
+    ctx.modelLoader.cancelIntro?.();
+  }
 
   if (ctx.textOverlay) {
     if (textParams.enabled) {
@@ -262,6 +350,14 @@ export async function applyState(state, ctx, { silent = false } = {}) {
   if (ctx.audioSystem) {
     await ctx.audioSystem.sync({ resumeFadeIn: false });
   }
+
+  if (animationParams.playing) {
+    ctx.terrainAnimation?.startAmplitudeIntro();
+  }
+
+  ctx.oceanSystem?.sync();
+  ctx.particleSystem?.sync();
+  ctx.ui.refresh();
 
   document.getElementById("position").style.display = params.debug ? "block" : "none";
 }

@@ -64,10 +64,10 @@
   },
   "audio": {
     "playing": true,
-    "envSound": "tigre",
-    "envVolume": 0.21999999999999997,
+    "envSound": "aves",
+    "envVolume": 0.5,
     "objectSound": "piano_resonancia",
-    "objectVolume": 1,
+    "objectVolume": 0,
     "sensitivity": 1,
     "loopFadeMs": 800
   },

@@ -3,6 +3,7 @@ import { Text } from "three-text";
 import { woff2Decode } from "woff-lib/woff2/decode";
 import { getTextById } from "./textLines.js";
 import { textParams } from "./textParams.js";
+import { flipVertexShader } from "./flipShaders.js";
 import { twisterFragmentShader, twisterVertexShader } from "./twisterShaders.js";
 
 const FONT_PATH = "./lib/fonts/ManieraVF.woff2";
@@ -15,6 +16,11 @@ function ensureHarfBuzz() {
   Text.setHarfBuzzPath("./lib/hb/hb.wasm");
   Text.enableWoff2(woff2Decode);
   harfBuzzReady = true;
+}
+
+function getDisplayText() {
+  if (textParams.content?.trim()) return textParams.content;
+  return getTextById(textParams.lineId);
 }
 
 function centerGeometry(geometry) {
@@ -37,6 +43,21 @@ function centerGeometry(geometry) {
   glyphCenter.needsUpdate = true;
 }
 
+function computeDiagonalRange(geometry) {
+  const glyphCenter = geometry.attributes.glyphCenter;
+  if (!glyphCenter) return { min: 0, max: 1 };
+
+  let min = Infinity;
+  let max = -Infinity;
+  for (let i = 0; i < glyphCenter.count; i++) {
+    const diagonal = glyphCenter.getX(i) + glyphCenter.getY(i);
+    min = Math.min(min, diagonal);
+    max = Math.max(max, diagonal);
+  }
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { min: 0, max: 1 };
+  return { min, max };
+}
+
 function createTwisterMaterial(time) {
   return new THREE.ShaderMaterial({
     uniforms: {
@@ -56,8 +77,38 @@ function createTwisterMaterial(time) {
   });
 }
 
+function createFlipMaterial(time, diagonalRange) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: time },
+      flipSpeed: { value: textParams.flipSpeed },
+      flipPauseDuration: { value: textParams.flipPauseDuration },
+      minDiagonal: { value: diagonalRange.min },
+      maxDiagonal: { value: diagonalRange.max },
+      opacity: { value: 1.0 },
+    },
+    vertexShader: flipVertexShader,
+    fragmentShader: twisterFragmentShader,
+    vertexColors: true,
+    side: THREE.DoubleSide,
+    transparent: true,
+    wireframe: textParams.wireframe,
+    defines: { USE_COLOR: "" },
+  });
+}
+
+function createBasicMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color().fromArray(TEXT_COLOR),
+    wireframe: textParams.wireframe,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.95,
+  });
+}
+
 /**
- * Secondary 3D poem text orbiting the terrain model (three-text twister).
+ * Secondary 3D poem text orbiting the terrain model (three-text twister / flip).
  */
 export function createTextOverlay({ scene, loading, getModelBounds }) {
   let textGroup = null;
@@ -66,6 +117,7 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
   let time = 0;
   let rendering = false;
   let pendingRebuild = false;
+  let diagonalRange = { min: 0, max: 1 };
 
   function syncTransform() {
     if (!textGroup) return;
@@ -80,14 +132,46 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
     }
   }
 
+  function applyOrientation() {
+    if (!textGroup) return;
+    textGroup.rotation.x = textParams.upright ? 0 : -Math.PI / 2;
+  }
+
   function updateMaterialUniforms() {
     if (!textMesh?.material) return;
+
+    if (textParams.animationMode === "orbit") {
+      textMesh.material.wireframe = textParams.wireframe;
+      return;
+    }
+
     const uniforms = textMesh.material.uniforms;
     if (!uniforms) return;
-    uniforms.twisterSpeed.value = textParams.twisterSpeed;
-    uniforms.twisterHeight.value = textParams.twisterHeight;
-    uniforms.twisterRadius.value = textParams.twisterRadius;
+
+    if (textParams.animationMode === "twister") {
+      if (uniforms.twisterSpeed) uniforms.twisterSpeed.value = textParams.twisterSpeed;
+      if (uniforms.twisterHeight) uniforms.twisterHeight.value = textParams.twisterHeight;
+      if (uniforms.twisterRadius) uniforms.twisterRadius.value = textParams.twisterRadius;
+    } else if (textParams.animationMode === "flip") {
+      if (uniforms.flipSpeed) uniforms.flipSpeed.value = textParams.flipSpeed;
+      if (uniforms.flipPauseDuration) {
+        uniforms.flipPauseDuration.value = textParams.flipPauseDuration;
+      }
+      if (uniforms.minDiagonal) uniforms.minDiagonal.value = diagonalRange.min;
+      if (uniforms.maxDiagonal) uniforms.maxDiagonal.value = diagonalRange.max;
+    }
+
     textMesh.material.wireframe = textParams.wireframe;
+  }
+
+  function createMaterialForMode() {
+    if (textParams.animationMode === "flip") {
+      return createFlipMaterial(time, diagonalRange);
+    }
+    if (textParams.animationMode === "orbit") {
+      return createBasicMaterial();
+    }
+    return createTwisterMaterial(time);
   }
 
   async function render() {
@@ -108,7 +192,7 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
       loading?.begin("text");
 
       const opts = {
-        text: getTextById(textParams.lineId),
+        text: getDisplayText(),
         font: FONT_PATH,
         size: textParams.fontSize,
         letterSpacing: textParams.letterSpacing,
@@ -117,8 +201,10 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
         perGlyphAttributes: true,
         fontVariations: { wght: 100 },
         layout: {
-          direction: "rtl",
-          align: "justify",
+          direction: textParams.direction,
+          align: textParams.align,
+          lineWidth: textParams.lineWidth,
+          lineHeight: textParams.lineHeight,
           respectExistingBreaks: true,
         },
       };
@@ -129,8 +215,9 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
       textInstance = result;
 
       centerGeometry(result.geometry);
+      diagonalRange = computeDiagonalRange(result.geometry);
 
-      const material = createTwisterMaterial(time);
+      const material = createMaterialForMode();
 
       if (textMesh) {
         textMesh.geometry.dispose();
@@ -141,10 +228,10 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
         textMesh = new THREE.Mesh(result.geometry, material);
         textGroup = new THREE.Group();
         textGroup.add(textMesh);
-        textGroup.rotation.x = -Math.PI / 2;
         scene.add(textGroup);
       }
 
+      applyOrientation();
       textGroup.visible = true;
       syncTransform();
     } catch (err) {
@@ -171,7 +258,7 @@ export function createTextOverlay({ scene, loading, getModelBounds }) {
       textMesh.material.uniforms.time.value = time;
     }
 
-    if (textGroup && textParams.orbitSpeed) {
+    if (textGroup && textParams.animationMode === "orbit" && textParams.orbitSpeed) {
       textGroup.rotation.z += textParams.orbitSpeed * delta;
     }
   }

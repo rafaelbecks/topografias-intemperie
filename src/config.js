@@ -80,6 +80,12 @@ export const CAMERA_INTRO = {
   duration: 2.5,
 };
 
+/** Amplitude ramp when a scene loads with animation enabled. */
+export const ANIMATION_INTRO = {
+  hold: 2,
+  duration: 1.5,
+};
+
 export const MODEL_OPTIONS = [
   { text: "El valle de las tres cumbres", value: "cart2" },
   { text: "Terreno de curvaturas continuas", value: "cart4" },

@@ -14,11 +14,11 @@ if ! command -v oiiotool >/dev/null 2>&1; then
 fi
 
 shopt -s nullglob nocaseglob
-files=("$SRC_DIR"/*.{jpg,jpeg,heic})
+files=("$SRC_DIR"/*.{jpg,jpeg,heic,png})
 shopt -u nocaseglob
 
 if [ ${#files[@]} -eq 0 ]; then
-  echo "No jpg/heic files in $SRC_DIR" >&2
+  echo "No jpg/heic/png files in $SRC_DIR" >&2
   exit 1
 fi
 

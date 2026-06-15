@@ -5,22 +5,41 @@ function isTypingTarget(target) {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-export function setupKeyboardShortcuts({ audioSystem, toggleSensorActive } = {}) {
+export function setupKeyboardShortcuts({
+  toggleSensorActive,
+  toggleWireframe,
+  toggleParticles,
+  onSceneSelect,
+  sceneOrder = [],
+  frontScene,
+} = {}) {
   function onKeyDown(e) {
     if (e.repeat || isTypingTarget(e.target)) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    const index = Number.parseInt(e.key, 10);
+    if (Number.isFinite(index)) {
+      if (index === 0 && frontScene && onSceneSelect) {
+        onSceneSelect(frontScene);
+        return;
+      }
+      if (index >= 1 && index <= sceneOrder.length && onSceneSelect) {
+        onSceneSelect(sceneOrder[index - 1]);
+        return;
+      }
+    }
 
     if (e.code === "Space") {
-      if (!audioSystem) return;
       e.preventDefault();
-      if (audioSystem.isPlaying()) {
-        audioSystem.stop();
+      if (e.shiftKey) {
+        toggleParticles?.();
       } else {
-        audioSystem.play().catch(console.error);
+        toggleWireframe?.();
       }
       return;
     }
 
-    if (e.code === "KeyS" && e.shiftKey) {
+    if (e.code === "KeyX" && e.shiftKey) {
       if (!toggleSensorActive) return;
       e.preventDefault();
       toggleSensorActive();

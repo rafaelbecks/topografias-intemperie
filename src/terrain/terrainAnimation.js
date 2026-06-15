@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ANIMATION_INTRO } from "../config.js";
 import { animationParams } from "./animationParams.js";
 import { analyzeTerrainLayers } from "./layerAnalysis.js";
 import { computeLayerSelection, seededRandom } from "./layerSelection.js";
@@ -7,6 +8,11 @@ import { applyMotion } from "./motions.js";
 
 const _highlightColor = new THREE.Color(0x6ec8ff);
 const _defaultEmissive = new THREE.Color();
+const _motionParams = { ...animationParams };
+
+function easeInCubic(t) {
+  return t * t * t;
+}
 
 /**
  * Layer animation orchestrator — runs in requestAnimationFrame, no per-mesh GSAP.
@@ -16,6 +22,37 @@ export function createTerrainAnimation() {
   let spatial = { terrainCenter: new THREE.Vector3(), maxDistance: 1, maxHeight: 1 };
   let selectionCache = [];
   let debugMaterials = new Map();
+  let amplitudeIntro = null;
+
+  function getAmplitudeScale() {
+    if (!amplitudeIntro) return 1;
+
+    const elapsed = (performance.now() - amplitudeIntro.startedAt) / 1000;
+    const { hold, duration } = ANIMATION_INTRO;
+
+    if (elapsed < hold) return 0;
+
+    const t = Math.min(1, (elapsed - hold) / duration);
+    if (t >= 1) {
+      amplitudeIntro = null;
+      return 1;
+    }
+
+    return easeInCubic(t);
+  }
+
+  function getMotionParams() {
+    const scale = getAmplitudeScale();
+    if (scale >= 1) return animationParams;
+    Object.assign(_motionParams, animationParams);
+    _motionParams.amplitude = animationParams.amplitude * scale;
+    return _motionParams;
+  }
+
+  function startAmplitudeIntro() {
+    if (!animationParams.playing) return;
+    amplitudeIntro = { startedAt: performance.now() };
+  }
 
   function refreshSelectionAndPhases() {
     if (layers.length === 0) return;
@@ -109,7 +146,8 @@ export function createTerrainAnimation() {
     if (!animationParams.playing || layers.length === 0) return;
 
     const time = elapsed;
-    const { randomness, seed } = animationParams;
+    const motionParams = getMotionParams();
+    const { randomness, seed } = motionParams;
 
     for (const mesh of layers) {
       const meta = mesh.userData.terrainLayer;
@@ -126,7 +164,7 @@ export function createTerrainAnimation() {
           ? seededRandom(seed, meta.index * 13) * randomness
           : 0;
 
-      applyMotion(mesh, time, animationParams, jitter);
+      applyMotion(mesh, time, motionParams, jitter);
     }
   }
 
@@ -142,6 +180,7 @@ export function createTerrainAnimation() {
     resetLayers,
     refreshSelectionAndPhases,
     randomizeSelectionSeed,
+    startAmplitudeIntro,
     dispose,
     getLayers: () => layers,
     getLayerCount: () => layers.length,

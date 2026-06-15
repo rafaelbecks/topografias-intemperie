@@ -1,9 +1,10 @@
 import { loadStateFromFile, loadStateFromUrl } from "./state.js";
 
-export const DEFAULT_SCENE = "ventanas.json";
+export const FRONT_SCENE = "front.json";
+export const DEFAULT_SCENE = FRONT_SCENE;
 export const SCENES_BASE = "./scenes/";
 
-/** Number keys 1…N on the front page map to these scenes (in order). */
+/** Number keys 1…N switch to these poem scenes (front is the default entry). */
 export const SCENE_ORDER = [
   "cienaga.json",
   "cuerda.json",
@@ -11,6 +12,8 @@ export const SCENE_ORDER = [
   "inefable.json",
   "ventanas.json",
 ];
+
+export const ALL_SCENES = [FRONT_SCENE, ...SCENE_ORDER];
 
 export function sceneUrl(name) {
   return `${SCENES_BASE}${name}`;
@@ -27,7 +30,7 @@ export async function loadDefaultScene(ctx) {
 export function getInitialSceneName() {
   const param = new URLSearchParams(window.location.search).get("scene");
   if (param) return param;
-  return DEFAULT_SCENE;
+  return FRONT_SCENE;
 }
 
 export function supportsDirectoryPicker() {

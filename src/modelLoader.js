@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { CAMERA_INTRO, params } from "./config.js";
+import { isNoModel } from "./modelUtils.js";
 
 function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
@@ -78,8 +79,26 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
     };
   }
 
-  function loadModel(name, { silent = false } = {}) {
+  function loadModel(name, { silent = false, skipIntro = false } = {}) {
     const id = ++loadId;
+
+    if (isNoModel(name)) {
+      return new Promise((resolve) => {
+        if (!silent) loading?.begin("model");
+
+        if (currentModel) {
+          scene.remove(currentModel);
+          disposeModel(currentModel);
+          currentModel = null;
+        }
+
+        introAnimation = null;
+        onModelLoaded?.(null);
+
+        if (!silent) loading?.end("model");
+        resolve(null);
+      });
+    }
 
     return new Promise((resolve, reject) => {
       if (!silent) loading?.begin("model");
@@ -118,7 +137,7 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
           applyWireframe(model, params.wireframe);
           onModelLoaded?.(model);
           const framedY = frameCamera(size);
-          startIntroAnimation(framedY);
+          if (!skipIntro) startIntroAnimation(framedY);
 
           if (!silent) loading?.end("model");
           resolve(model);
@@ -179,9 +198,14 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
     return { size: box.getSize(new THREE.Vector3()), center: box.getCenter(new THREE.Vector3()) };
   }
 
+  function cancelIntro() {
+    introAnimation = null;
+  }
+
   return {
     loadModel,
     updateIntro,
+    cancelIntro,
     setWireframe,
     setRoughness,
     getCurrentModel: () => currentModel,
