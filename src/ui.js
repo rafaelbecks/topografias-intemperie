@@ -13,6 +13,9 @@ import { setupSensorUI } from "./ui/sensorUI.js";
 import { setupKeyboardShortcuts } from "./ui/keyboardShortcuts.js";
 import { setupTextUI } from "./text/textUI.js";
 import { setupAudioUI } from "./audio/audioUI.js";
+import { setupSpeechUI } from "./speech/speechUI.js";
+import { ditherParams } from "./dither/ditherParams.js";
+import { randomDistinctDitherRgb } from "./dither/ditherTableValues.js";
 import { particleParams } from "./particles/particleParams.js";
 import { FRONT_SCENE, SCENE_ORDER } from "./scenes.js";
 
@@ -118,6 +121,30 @@ export function createUI(ctx) {
     setupAudioUI(audioPage, ctx.audioSystem);
   }
 
+  function toggleWireframe() {
+    params.wireframe = !params.wireframe;
+    ctx.modelLoader.setWireframe(params.wireframe);
+    refresh();
+  }
+
+  function toggleParticles() {
+    particleParams.enabled = !particleParams.enabled;
+    ctx.particleSystem?.sync();
+    refresh();
+  }
+
+  function toggleDither() {
+    const enabling = !ditherParams.enabled;
+    ditherParams.enabled = enabling;
+    if (enabling) {
+      Object.assign(ditherParams, randomDistinctDitherRgb());
+    }
+    ctx.ditherOverlay?.sync();
+    refresh();
+  }
+
+  setupSpeechUI(pane, { toggleWireframe, toggleParticles, toggleDither });
+
   const sensorUI = setupSensorUI(pane, {
     sensorClient: ctx.sensorClient,
     sensorController: ctx.sensorController,
@@ -130,16 +157,8 @@ export function createUI(ctx) {
 
   setupKeyboardShortcuts({
     toggleSensorActive: sensorUI.toggleActive,
-    toggleWireframe: () => {
-      params.wireframe = !params.wireframe;
-      ctx.modelLoader.setWireframe(params.wireframe);
-      refresh();
-    },
-    toggleParticles: () => {
-      particleParams.enabled = !particleParams.enabled;
-      ctx.particleSystem?.sync();
-      refresh();
-    },
+    toggleWireframe,
+    toggleParticles,
     frontScene: FRONT_SCENE,
     sceneOrder: SCENE_ORDER,
     onSceneSelect: (name) => scenesUI.loadScene(name),
