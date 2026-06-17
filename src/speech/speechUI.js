@@ -24,12 +24,15 @@ export function setupSpeechUI(
   };
 
   const subtitles = createSpeechSubtitles();
-  const commands = createSpeechCommandHandler({
-    toggleWireframe,
-    toggleParticles,
-    toggleDither,
-    cycleOceanShape,
-  });
+  const commands = createSpeechCommandHandler(
+    {
+      toggleWireframe,
+      toggleParticles,
+      toggleDither,
+      cycleOceanShape,
+    },
+    { getCooldownMs: () => speechParams.commandCooldownMs }
+  );
 
   const recognition = createSpeechRecognition({
     lang: state.lang,
@@ -66,6 +69,13 @@ export function setupSpeechUI(
 
   folder.addBinding(speechParams, "showSubtitles", { label: "subtitles" }).on("change", (e) => {
     if (!e.value) subtitles.clear();
+  });
+
+  folder.addBinding(speechParams, "commandCooldownMs", {
+    label: "command cooldown (ms)",
+    min: 800,
+    max: 8000,
+    step: 100,
   });
 
   folder.addButton({ title: "Start listening" }).on("click", () => {
