@@ -8,7 +8,7 @@ import {
   OBJECT_SOUNDS,
 } from "./audio/audioSources.js";
 import { GRAIN_PARAM_KEYS, grainParams } from "./grain/grainParams.js";
-import { DITHER_PARAM_KEYS, ditherParams } from "./dither/ditherParams.js";
+import { DITHER_PARAM_KEYS, clampDitherParams, ditherParams } from "./dither/ditherParams.js";
 import { STEREO_PARAM_KEYS, stereoParams } from "./stereo/stereoParams.js";
 import { DEFAULT_PAGE_TITLE, syncPageTitle, TEXT_LINES } from "./text/textLines.js";
 import { DEFAULT_TEXT_PARAMS, TEXT_PARAM_KEYS, textParams, ANIMATION_MODES } from "./text/textParams.js";
@@ -139,6 +139,7 @@ function applyDitherState(dither) {
   for (const key of DITHER_PARAM_KEYS) {
     if (dither[key] !== undefined) ditherParams[key] = dither[key];
   }
+  clampDitherParams();
 }
 
 function applyStereoState(stereo) {

@@ -7,7 +7,7 @@
     "roughness": 0.5,
     "envFormat": "exr",
     "environment": "img_7469",
-    "bgBlur": 0.05,
+    "bgBlur": 0.09,
     "moveSpeed": 1,
     "fpMove": true,
     "autoRotate": false,

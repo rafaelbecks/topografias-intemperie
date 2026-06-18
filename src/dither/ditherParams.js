@@ -5,6 +5,9 @@ export const ditherParams = {
   tableValuesR: 0,
   tableValuesG: 0,
   tableValuesB: 0,
+  cycleEnabled: false,
+  cycleIntervalSec: 1,
+  cycleSmooth: true,
 };
 
 export const DITHER_PARAM_KEYS = [
@@ -13,4 +16,11 @@ export const DITHER_PARAM_KEYS = [
   "tableValuesR",
   "tableValuesG",
   "tableValuesB",
+  "cycleEnabled",
+  "cycleIntervalSec",
+  "cycleSmooth",
 ];
+
+export function clampDitherParams() {
+  ditherParams.cycleIntervalSec = Math.max(0.25, ditherParams.cycleIntervalSec);
+}

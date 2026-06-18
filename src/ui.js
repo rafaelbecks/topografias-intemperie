@@ -15,7 +15,6 @@ import { setupTextUI } from "./text/textUI.js";
 import { setupAudioUI } from "./audio/audioUI.js";
 import { setupSpeechUI } from "./speech/speechUI.js";
 import { ditherParams } from "./dither/ditherParams.js";
-import { randomDistinctDitherRgb } from "./dither/ditherTableValues.js";
 import { particleParams } from "./particles/particleParams.js";
 import { advanceOceanShapeCycle } from "./ocean/oceanShapeCycle.js";
 import { FRONT_SCENE, SCENE_ORDER } from "./scenes.js";
@@ -107,7 +106,7 @@ export function createUI(ctx) {
   setupAnimationUI(animationPage, terrainAnimation, pane);
   setupGrainUI(pane, grainOverlay);
   if (ctx.ditherOverlay) {
-    setupDitherUI(pane, ctx.ditherOverlay);
+    setupDitherUI(pane, ctx.ditherOverlay, ctx.ditherCycle);
   }
 
   if (ctx.stereoEffects) {
@@ -135,10 +134,10 @@ export function createUI(ctx) {
   }
 
   function toggleDither() {
-    const enabling = !ditherParams.enabled;
-    ditherParams.enabled = enabling;
-    if (enabling) {
-      Object.assign(ditherParams, randomDistinctDitherRgb());
+    if (ditherParams.enabled && ditherParams.cycleEnabled) {
+      ctx.ditherCycle?.deactivate();
+    } else {
+      ctx.ditherCycle?.activate();
     }
     ctx.ditherOverlay?.sync();
     refresh();

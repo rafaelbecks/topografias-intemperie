@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "params": {
     "lightIntensity": 0,
     "ambient": 0.6521739130434783,
@@ -54,33 +54,51 @@
     "saturate": 1,
     "tableValuesR": 0,
     "tableValuesG": 0,
-    "tableValuesB": 0
+    "tableValuesB": 0,
+    "cycleEnabled": false,
+    "cycleIntervalSec": 1,
+    "cycleSmooth": true
+  },
+  "stereo": {
+    "anaglyphEnabled": false,
+    "parallaxBarrierEnabled": false,
+    "eyeSep": 0.064,
+    "planeDistance": 200
   },
   "text": {
     "enabled": true,
     "lineId": "disension",
+    "content": "",
     "fontSize": 194,
     "letterSpacing": 0.5,
     "depth": 15,
     "scale": 0.35,
+    "upright": false,
+    "direction": "rtl",
+    "align": "justify",
+    "lineWidth": 3000,
+    "lineHeight": 1.25,
+    "animationMode": "twister",
     "orbitSpeed": 0.08,
     "wireframe": true,
     "twisterSpeed": 0.4,
     "twisterHeight": 300,
-    "twisterRadius": 300
+    "twisterRadius": 300,
+    "flipSpeed": 0.3,
+    "flipPauseDuration": 0.3
   },
   "audio": {
     "playing": true,
     "envSound": "intemperie",
-    "envVolume": 0.41,
-    "objectSound": "pata_perro",
-    "objectVolume": 0,
+    "envVolume": 0.35,
+    "objectSound": "lanzarote",
+    "objectVolume": 0.6,
     "sensitivity": 1,
     "loopFadeMs": 800
   },
   "ocean": {
-    "enabled": false,
-    "shape": "plane",
+    "enabled": true,
+    "shape": "sphere",
     "height": -20,
     "sizeScale": 4,
     "shapeSegments": 128,
@@ -88,7 +106,7 @@
     "noiseAmplitude": 0.35,
     "noiseScale": 1.2,
     "noiseSeed": 42,
-    "envelopeRadius": 2.5,
+    "envelopeRadius": 30,
     "torusTube": 0.35,
     "torusKnotRadius": 1,
     "torusKnotTube": 0.4,
@@ -96,6 +114,15 @@
     "torusKnotRadialSegments": 16,
     "torusKnotP": 2,
     "torusKnotQ": 3,
+    "torusNoiseEnabled": false,
+    "torusNoiseAmplitude": 0.25,
+    "torusNoiseScale": 1.5,
+    "torusNoiseSeed": 42,
+    "torusNoiseOctaves": 3,
+    "torusNoiseMorphSpeed": 3,
+    "envelopeRotationX": 0,
+    "envelopeRotationY": 0,
+    "envelopeRotationZ": 0,
     "envelopeSide": "double",
     "waterColor": "#001e0f",
     "sunColor": "#ffffff",
@@ -120,9 +147,9 @@
   },
   "camera": {
     "position": [
-      1.277145288109176,
-      1.6299419446684613,
-      -0.6911236832827883
+      -4.151183698215659,
+      0.9857548950048,
+      0.3545744522644551
     ],
     "target": [
       0,

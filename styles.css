@@ -64,23 +64,13 @@ canvas {
   object-fit: cover;
 }
 
-#grain-overlay {
-  position: absolute;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-}
-
 #dither-overlay {
   position: absolute;
   inset: 0;
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 51;
+  z-index: 50;
   display: none;
   background: transparent;
 }
@@ -92,6 +82,16 @@ canvas {
   filter: url(#ditherFilter);
   image-rendering: crisp-edges;
   image-rendering: pixelated;
+}
+
+#grain-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 51;
+  overflow: hidden;
 }
 
 #position {

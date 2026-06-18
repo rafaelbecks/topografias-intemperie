@@ -70,3 +70,19 @@ export function randomDistinctDitherRgb() {
 
   return result;
 }
+
+export function maxDitherValues() {
+  return {
+    saturate: 1,
+    tableValuesR: 1,
+    tableValuesG: 1,
+    tableValuesB: 1,
+  };
+}
+
+export function randomDitherGeneration() {
+  return {
+    saturate: 1,
+    ...randomDistinctDitherRgb(),
+  };
+}

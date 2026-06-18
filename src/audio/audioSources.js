@@ -68,6 +68,10 @@ export const OBJECT_SOUNDS = {
     label: "Tunnelbanna",
     file: "tunnelbanna.wav",
   },
+  lanzarote: {
+    label: "Lanzarote",
+    file: "lanzarote.wav",
+  }
 };
 
 export const DEFAULT_ENV_SOUND = "lluvia_bogota";

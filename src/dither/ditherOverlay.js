@@ -71,11 +71,16 @@ export function createDitherOverlay(renderer) {
     componentTransfer.querySelector(selector)?.setAttribute("tableValues", tableValueString);
   }
 
-  function syncFilter() {
-    updateSaturate(ditherParams.saturate);
-    updateTableValues("R", ditherParams.tableValuesR);
-    updateTableValues("G", ditherParams.tableValuesG);
-    updateTableValues("B", ditherParams.tableValuesB);
+  function syncFilter(values = ditherParams) {
+    updateSaturate(values.saturate);
+    updateTableValues("R", values.tableValuesR);
+    updateTableValues("G", values.tableValuesG);
+    updateTableValues("B", values.tableValuesB);
+  }
+
+  function setFilterValues(values) {
+    ensureElements();
+    syncFilter(values);
   }
 
   function sync() {
@@ -93,5 +98,5 @@ export function createDitherOverlay(renderer) {
     ctx.drawImage(renderer.domElement, 0, 0, canvas.width, canvas.height);
   }
 
-  return { sync, update };
+  return { sync, update, setFilterValues };
 }

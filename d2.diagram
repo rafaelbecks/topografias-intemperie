@@ -1,0 +1,45 @@
+direction: up
+
+projection: {
+  label: "Proyección / Pantalla inmersiva"
+}
+
+table: {
+  label: "Mesa interactiva"
+
+  light: {
+    label: "Haz de luz\n(TF-Luna)"
+  }
+
+  mic: {
+    label: "Micrófono"
+  }
+
+  mineral: {
+    label: "Mineral sintético\n(Acelerómetro)"
+  }
+
+  cards: {
+    label: "Tarjetas de memoria\n(NFC)"
+  }
+}
+
+visitor: {
+  label: "Visitante"
+}
+
+visitor -> table.cards: selecciona
+table.cards -> projection: activa escena
+
+visitor -> table.mineral: rota
+table.mineral -> projection: orientación
+
+visitor -> table.light: intercepta haz
+table.light -> projection: profundidad
+
+visitor -> table.mic: habla
+table.mic -> projection: mutaciones
+
+projection -> scene: {
+  label: "Topografías\nOcéano\nTexto\nSonido"
+}

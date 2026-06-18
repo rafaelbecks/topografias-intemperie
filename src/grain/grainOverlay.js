@@ -20,7 +20,6 @@ export function createGrainOverlay() {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 50;
     display: block;
     overflow: hidden;`;
     document.body.appendChild(el);

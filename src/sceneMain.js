@@ -6,6 +6,7 @@ import { createUI } from "./ui.js";
 import { createTerrainAnimation } from "./terrain/terrainAnimation.js";
 import { createGrainOverlay } from "./grain/grainOverlay.js";
 import { createDitherOverlay } from "./dither/ditherOverlay.js";
+import { createDitherCycle } from "./dither/ditherCycle.js";
 import { createLoading } from "./ui/loading.js";
 import { createSceneFreeze } from "./ui/sceneFreeze.js";
 import { createSensorClient } from "./sensor/sensorClient.js";
@@ -50,6 +51,7 @@ export async function bootSceneViewer(sceneName) {
   const particleSystem = createParticleSystem();
   const grainOverlay = createGrainOverlay();
   const ditherOverlay = createDitherOverlay(renderer);
+  const ditherCycle = createDitherCycle(ditherOverlay);
   const input = createInputSystem(camera, controls);
   const audioSystem = createAudioSystem({ camera, loading });
 
@@ -109,6 +111,7 @@ export async function bootSceneViewer(sceneName) {
     terrainAnimation,
     grainOverlay,
     ditherOverlay,
+    ditherCycle,
     loading,
     sensorClient,
     sensorController,
@@ -139,6 +142,7 @@ export async function bootSceneViewer(sceneName) {
     stereoEffects.render(scene, camera);
     hasRendered = true;
     ditherOverlay.update();
+    ditherCycle.update(delta);
 
     const p = camera.position;
     const t = controls.target;
