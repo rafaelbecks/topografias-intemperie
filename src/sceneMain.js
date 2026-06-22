@@ -12,6 +12,8 @@ import { createSceneFreeze } from "./ui/sceneFreeze.js";
 import { createSensorClient } from "./sensor/sensorClient.js";
 import { createSensorController } from "./sensor/sensorController.js";
 import { sensorParams } from "./sensor/sensorConfig.js";
+import { setupNfcInput } from "./nfc/nfcInput.js";
+import { SCENE_ORDER } from "./scenes.js";
 import { createTextOverlay } from "./text/textOverlay.js";
 import { createAudioSystem } from "./audio/audioSystem.js";
 import { createOceanSystem } from "./ocean/oceanSystem.js";
@@ -125,6 +127,12 @@ export async function bootSceneViewer(sceneName) {
     postProcessing,
     sceneFreeze,
   });
+
+  setupNfcInput(sensorClient, {
+    sceneOrder: SCENE_ORDER,
+    onSceneSelect: (name) => ui.scenesUI.loadScene(name),
+  });
+  sensorClient.connect(sensorParams.url);
 
   const posEl = document.getElementById("position");
   posEl.style.display = "none";

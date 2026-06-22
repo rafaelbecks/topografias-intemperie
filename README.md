@@ -61,9 +61,9 @@ En el visor, usa **State → Export JSON** / **Load JSON** (sobre las pestañas 
 
 **Grain overlay** usa [grained.js](https://github.com/sarathsaleem/grained) (MIT) — actívalo en la carpeta **Grain overlay** al final del panel de controles.
 
-#### Sensor (IMU)
+#### Sensor (IMU + NFC)
 
-Controlador IMU por WebSocket para navegación física (mineral/arcilla). Configúralo en el panel Sensor; por defecto apunta a `ws://127.0.0.1:8080`.
+Controlador IMU y tarjetas NFC por WebSocket (`ws://127.0.0.1:8080`). El visor se conecta al arrancar; las tarjetas NFC (vía [ardeidae](../ardeidae)) envían `/nfc/card` y cargan escenas como las teclas 1–4. Configura el puerto serial y UIDs en `ardeidae/src/config.js`.
 
 ## Autor
 

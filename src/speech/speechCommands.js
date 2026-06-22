@@ -1,3 +1,20 @@
+const EASTER_EGG_COMMANDS = [
+  {
+    id: "lionza",
+    match(text) {
+      const normalized = normalize(text);
+      if (normalized.includes("yo te invoco maria lionza")) return true;
+      return (
+        textContainsWord(text, "lionsa") ||
+        textContainsWord(text, "leonsa") ||
+        textContainsWord(text, "alianza") ||
+        textContainsWord(text, "leon") ||
+        textContainsWord(text, "maria")
+      );
+    },
+  },
+];
+
 const COMMAND_GROUPS = [
   {
     id: "wireframe",
@@ -42,11 +59,14 @@ export function matchSpeechCommands(text) {
       matched.push(group.id);
     }
   }
+  for (const egg of EASTER_EGG_COMMANDS) {
+    if (egg.match(text)) matched.push(egg.id);
+  }
   return matched;
 }
 
 export function createSpeechCommandHandler(
-  { toggleWireframe, toggleParticles, toggleDither, cycleOceanShape },
+  { toggleWireframe, toggleParticles, toggleDither, cycleOceanShape, loadLionzaModel },
   { getCooldownMs = () => DEFAULT_COMMAND_COOLDOWN_MS } = {}
 ) {
   const handlers = {
@@ -54,6 +74,7 @@ export function createSpeechCommandHandler(
     particles: toggleParticles,
     dither: toggleDither,
     oceanCycle: cycleOceanShape,
+    lionza: loadLionzaModel,
   };
 
   const lastFiredAt = new Map();

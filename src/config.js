@@ -83,7 +83,7 @@ export const CAMERA_INTRO = {
 /** Amplitude ramp when a scene loads with animation enabled. */
 export const ANIMATION_INTRO = {
   hold: 2,
-  duration: 1.5,
+  duration: 2,
 };
 
 export const MODEL_OPTIONS = [
@@ -99,7 +99,5 @@ export const MODEL_OPTIONS = [
   { text: "La quebrada de ocre profundo", value: "cart14" },
   { text: "Macizo del pez erosionado", value: "cart15" },
   { text: "Organic model", value: "organic_model" },
-    { text: "Art gallery 1", value: "art_gallery" },
-  { text: "Art gallery 2", value: "art_gallery1" },
-
+  { text: "María Lionza", value: "lionza" },
 ];

@@ -14,13 +14,7 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
   const folder = pane.addFolder({ title: "Controller sensor", expanded: false });
 
   function applyActiveState(active) {
-    if (active) {
-      sensorController.setActive(true);
-      sensorClient.connect(sensorParams.url);
-    } else {
-      sensorClient.disconnect();
-      sensorController.setActive(false);
-    }
+    sensorController.setActive(active);
   }
 
   function setActive(active) {
@@ -45,11 +39,14 @@ export function setupSensorUI(pane, { sensorClient, sensorController }) {
   });
 
   folder.addButton({ title: "Connect" }).on("click", () => {
-    setActive(true);
+    sensorClient.connect(sensorParams.url);
   });
 
   folder.addButton({ title: "Disconnect" }).on("click", () => {
-    setActive(false);
+    sensorClient.disconnect();
+    sensorController.setActive(false);
+    sensorParams.enabled = false;
+    pane.refresh();
   });
 
   folder.addButton({ title: "Calibrate (zero pose)" }).on("click", () => {

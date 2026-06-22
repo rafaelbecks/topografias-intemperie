@@ -1,8 +1,9 @@
 import { applySensorMessage, createSensorState } from "./sensorState.js";
 
-export function createSensorClient({ onState } = {}) {
+export function createSensorClient({ onState, onMessage } = {}) {
   let socket = null;
   let onStatus = () => {};
+  let externalMessageHandler = onMessage ?? (() => {});
   const state = createSensorState();
 
   function setStatus(connected, detail = "") {
@@ -22,6 +23,7 @@ export function createSensorClient({ onState } = {}) {
     socket.addEventListener("message", (event) => {
       try {
         const { address, value } = JSON.parse(event.data);
+        externalMessageHandler({ address, value });
         if (applySensorMessage(state, address, value)) {
           onState?.(state);
         }
@@ -58,6 +60,9 @@ export function createSensorClient({ onState } = {}) {
     getState,
     set onStatus(handler) {
       onStatus = handler ?? (() => {});
+    },
+    set onMessage(handler) {
+      externalMessageHandler = handler ?? (() => {});
     },
   };
 }

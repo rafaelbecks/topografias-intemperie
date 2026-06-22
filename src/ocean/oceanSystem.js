@@ -5,6 +5,7 @@ import {
   applyEnvelopeNoiseDeform,
   captureEnvelopeBaseGeometry,
 } from "./envelopeNoiseDeform.js";
+import { exportEnvelopeModel } from "./envelopeExport.js";
 import {
   createOceanGeometry,
   DEFORMABLE_ENVELOPE_SHAPES,
@@ -224,5 +225,18 @@ export function createOceanSystem({ scene, getModelBounds }) {
     updateEnvelopeNoise(delta);
   }
 
-  return { sync, bindModel, update, snapTorusNoiseMix };
+  async function exportEnvelope() {
+    if (!water || !oceanParams.enabled) {
+      return { ok: false, reason: "Enable the ocean envelope first." };
+    }
+    if (!DEFORMABLE_ENVELOPE_SHAPES.has(oceanParams.shape)) {
+      return { ok: false, reason: "Switch to torus or torus knot shape first." };
+    }
+
+    const bounds = getModelBounds?.();
+    const extent = getLayoutExtent(bounds);
+    return exportEnvelopeModel({ mesh: water, extent, noiseMix: torusNoiseMix });
+  }
+
+  return { sync, bindModel, update, snapTorusNoiseMix, exportEnvelope };
 }

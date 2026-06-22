@@ -53,6 +53,13 @@ export function setupAnimationUI(page, terrainAnimation, pane) {
     options: toOptions(MOTION_TYPES, MOTION_LABELS),
   });
   motionFolder.addBinding(animationParams, "amplitude", { min: 0, max: 0.5, step: 0.005 });
+  motionFolder.addBinding(animationParams, "amplitudeModEnabled", { label: "amplitude mod" });
+  motionFolder.addBinding(animationParams, "amplitudeModRate", {
+    label: "mod rate",
+    min: 0.05,
+    max: 2,
+    step: 0.01,
+  });
   motionFolder.addBinding(animationParams, "frequency", { min: 0.05, max: 2, step: 0.01 });
   motionFolder.addBinding(animationParams, "speed", { min: 0.05, max: 2, step: 0.01 });
   motionFolder.addBinding(animationParams, "phaseSpread", { min: 0, max: 2, step: 0.01 });

@@ -166,11 +166,19 @@ export function createUI(ctx) {
     return changed;
   }
 
-  setupSpeechUI(pane, {
+  function loadLionzaModel() {
+    params.model = "lionza";
+    loadModel("lionza");
+    refresh();
+  }
+
+  setupSpeechUI(audioPage, {
+    refresh: () => refresh(),
     toggleWireframe,
     toggleParticles,
     toggleDither,
     cycleOceanShape,
+    loadLionzaModel,
   });
 
   const sensorUI = setupSensorUI(pane, {

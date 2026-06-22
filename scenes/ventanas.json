@@ -40,7 +40,7 @@
   "grain": {
     "enabled": true,
     "animate": true,
-    "grainOpacity": 0.305,
+    "grainOpacity": 0.230,
     "grainDensity": 3,
     "patternWidth": 100,
     "patternHeight": 100,

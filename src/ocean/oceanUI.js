@@ -131,6 +131,18 @@ export function setupOceanUI(page, oceanSystem) {
     step: 0.1,
   });
 
+  torusNoiseFolder.addButton({ title: "Export model (.glb + .json)" }).on("click", async () => {
+    try {
+      const result = await oceanSystem.exportEnvelope();
+      if (!result.ok) {
+        alert(result.reason);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(`Export failed: ${err.message}`);
+    }
+  });
+
   const torusKnotFolder = envelopeFolder.addFolder({
     title: "Torus knot",
     expanded: false,

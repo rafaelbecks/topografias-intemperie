@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ANIMATION_INTRO } from "../config.js";
+import { sineLfo } from "../front/lfo.js";
 import { animationParams } from "./animationParams.js";
 import { analyzeTerrainLayers } from "./layerAnalysis.js";
 import { computeLayerSelection, seededRandom } from "./layerSelection.js";
@@ -41,11 +42,20 @@ export function createTerrainAnimation() {
     return easeInCubic(t);
   }
 
-  function getMotionParams() {
-    const scale = getAmplitudeScale();
-    if (scale >= 1) return animationParams;
+  function getAmplitudeModFactor(time) {
+    if (!animationParams.amplitudeModEnabled) return 1;
+    return sineLfo(time, animationParams.amplitudeModRate, 0, 1);
+  }
+
+  function getMotionParams(time) {
+    const introScale = getAmplitudeScale();
+    const modFactor = getAmplitudeModFactor(time);
+    const amplitude = animationParams.amplitude * introScale * modFactor;
+
+    if (introScale >= 1 && modFactor === 1) return animationParams;
+
     Object.assign(_motionParams, animationParams);
-    _motionParams.amplitude = animationParams.amplitude * scale;
+    _motionParams.amplitude = amplitude;
     return _motionParams;
   }
 
@@ -146,7 +156,7 @@ export function createTerrainAnimation() {
     if (!animationParams.playing || layers.length === 0) return;
 
     const time = elapsed;
-    const motionParams = getMotionParams();
+    const motionParams = getMotionParams(time);
     const { randomness, seed } = motionParams;
 
     for (const mesh of layers) {

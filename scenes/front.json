@@ -3,7 +3,7 @@
   "params": {
     "lightIntensity": 2.8,
     "ambient": 0,
-    "exposure": 0.41521739130434776,
+    "exposure": 0.3,
     "roughness": 0.5,
     "envFormat": "exr",
     "environment": "exr_1",
@@ -40,7 +40,7 @@
   "grain": {
     "enabled": true,
     "animate": true,
-    "grainOpacity": 0.25,
+    "grainOpacity": 0.230,
     "grainDensity": 3,
     "patternWidth": 100,
     "patternHeight": 100,
