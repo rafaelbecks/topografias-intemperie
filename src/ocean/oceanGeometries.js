@@ -1,11 +1,27 @@
 import * as THREE from "three";
 import { createPerlin2D, sampleFbm2 } from "../math/perlin.js";
 
-export const OCEAN_SHAPES = ["plane", "circle", "oval", "noise", "sphere", "torus", "torusknot"];
+export const OCEAN_SHAPES = [
+  "plane",
+  "circle",
+  "oval",
+  "noise",
+  "sphere",
+  "ellipsoid",
+  "cuboid",
+  "torus",
+  "torusknot",
+];
 
 export const FLAT_SHAPES = new Set(["plane", "circle", "oval", "noise"]);
-export const ENVELOPE_SHAPES = new Set(["sphere", "torus", "torusknot"]);
-export const DEFORMABLE_ENVELOPE_SHAPES = new Set(["torus", "torusknot"]);
+export const ENVELOPE_SHAPES = new Set([
+  "sphere",
+  "ellipsoid",
+  "cuboid",
+  "torus",
+  "torusknot",
+]);
+export const DEFORMABLE_ENVELOPE_SHAPES = ENVELOPE_SHAPES;
 
 function sampleEdgeNoise(noise2d, angle, noiseScale, octaves) {
   const dirX = Math.cos(angle) * noiseScale;
@@ -29,6 +45,10 @@ function createNoiseDiscGeometry(radius, segments, { noiseScale, noiseAmplitude,
 
   shape.setFromPoints(points);
   return new THREE.ShapeGeometry(shape, segments);
+}
+
+function envelopeBaseRadius(extent, params) {
+  return extent * params.envelopeRadius * 0.5;
 }
 
 /**
@@ -56,8 +76,36 @@ export function createOceanGeometry(shape, extent, params) {
       return createNoiseDiscGeometry(radius, segments, params);
 
     case "sphere": {
-      const r = extent * params.envelopeRadius * 0.5;
+      const r = envelopeBaseRadius(extent, params);
       return new THREE.SphereGeometry(r, segments, Math.max(8, Math.floor(segments * 0.75)));
+    }
+
+    case "ellipsoid": {
+      const base = envelopeBaseRadius(extent, params);
+      const geo = new THREE.SphereGeometry(
+        1,
+        segments,
+        Math.max(8, Math.floor(segments * 0.75))
+      );
+      geo.scale(
+        base * params.ellipsoidRadiusX,
+        base * params.ellipsoidRadiusY,
+        base * params.ellipsoidRadiusZ
+      );
+      return geo;
+    }
+
+    case "cuboid": {
+      const base = envelopeBaseRadius(extent, params);
+      const divisions = Math.max(1, Math.floor(segments * 0.25));
+      return new THREE.BoxGeometry(
+        base * params.cuboidWidth * 2,
+        base * params.cuboidHeight * 2,
+        base * params.cuboidDepth * 2,
+        divisions,
+        divisions,
+        divisions
+      );
     }
 
     case "torus": {

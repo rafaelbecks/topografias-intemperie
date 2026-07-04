@@ -133,6 +133,11 @@
     "environmentIntensity": 0,
     "environmentRotationY": 0
   },
+  "envCycle": {
+    "enabled": false,
+    "intervalSec": 5,
+    "lookahead": 0
+  },
   "camera": {
     "position": [
       0.43169533189876186,

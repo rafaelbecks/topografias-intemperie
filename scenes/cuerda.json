@@ -19,7 +19,9 @@
   "animation": {
     "playing": true,
     "motionType": "tectonic",
-    "amplitude": 0.10999999999999999,
+    "amplitude": 0.19,
+    "amplitudeModEnabled": true,
+    "amplitudeModRate": 0.11,
     "frequency": 1.47,
     "speed": 1.3,
     "phaseSpread": 1.43,

@@ -23,19 +23,21 @@ import {
 import { particleParams } from "./particles/particleParams.js";
 import {
   applyOceanFlatNoise,
+  applyOceanCueva,
   applyOceanSphere,
   applyOceanTorusNoise,
 } from "./ocean/oceanShapeCycle.js";
 import { speechParams } from "./speech/speechParams.js";
 import { FRONT_SCENE, SCENE_ORDER } from "./scenes.js";
+import { setupEnvCycleUI } from "./env/envCycleUI.js";
 
 export function createUI(ctx) {
   const { loadModel, loadEnvironment, scene, camera, controls, terrainAnimation, grainOverlay } =
     ctx;
 
-  function reloadEnvironment(opts) {
+  function reloadEnvironment() {
     const path = getEnvPath(params.environment, params.envFormat);
-    if (path) return loadEnvironment(path, params.envFormat, opts);
+    if (path) return loadEnvironment(path, params.envFormat);
     return Promise.resolve();
   }
 
@@ -84,6 +86,7 @@ export function createUI(ctx) {
     ui: { refresh: () => refresh() },
     reloadEnvironment,
     loadModel,
+    envCycle: ctx.envCycle,
   });
 
   const tab = pane.addTab({
@@ -102,9 +105,22 @@ export function createUI(ctx) {
 
   const sceneTab = setupSceneTabUI(scenePage, ctx);
 
+  let envCycleUI;
+  if (ctx.envCycle) {
+    envCycleUI = setupEnvCycleUI(scenePage, ctx.envCycle, {
+      isFrontScene: () => scenesUI.currentScene() === FRONT_SCENE,
+    });
+    envCycleUI.refreshVisibility();
+  }
+
+  function refreshEnvironmentBinding() {
+    sceneTab.refreshEnvironmentBinding?.();
+  }
+
   function refresh() {
     sceneTab.setupEnvironmentControl();
     sceneTab.refreshModelBlade();
+    envCycleUI?.refreshVisibility();
     pane.refresh();
     grainOverlay.sync();
     ctx.ditherOverlay?.sync();
@@ -125,10 +141,6 @@ export function createUI(ctx) {
   if (ctx.postProcessing) {
     orderedDitherUI = setupOrderedDitherUI(pane, ctx.postProcessing, ctx.stereoEffects);
     ctx.orderedDitherUI = orderedDitherUI;
-  }
-
-  if (ctx.stereoEffects) {
-    setupStereoUI(pane, ctx.stereoEffects, () => orderedDitherUI?.refresh());
   }
 
   if (ctx.textOverlay) {
@@ -206,6 +218,12 @@ export function createUI(ctx) {
     refresh();
   }
 
+  function setOceanCueva() {
+    if (!ctx.oceanSystem) return;
+    applyOceanCueva(ctx.oceanSystem);
+    refresh();
+  }
+
   function loadLionzaModel() {
     params.model = "lionza";
     loadModel("lionza");
@@ -221,6 +239,7 @@ export function createUI(ctx) {
     setOceanManglar,
     setOceanCienaga,
     setOceanHumedal,
+    setOceanCueva,
     loadLionzaModel,
   });
 
@@ -243,5 +262,5 @@ export function createUI(ctx) {
     onSceneSelect: (name) => scenesUI.loadScene(name),
   });
 
-  return { pane, refresh, reloadEnvironment, sensorUI, paneToggle, scenesUI };
+  return { pane, refresh, refreshEnvironmentBinding, reloadEnvironment, sensorUI, paneToggle, scenesUI, envCycleUI };
 }

@@ -89,8 +89,60 @@ export function setupOceanUI(page, oceanSystem) {
     step: 0.01,
   });
 
+  const ellipsoidFolder = envelopeFolder.addFolder({
+    title: "Ellipsoid",
+    expanded: false,
+  });
+
+  ellipsoidFolder.addBinding(oceanParams, "ellipsoidRadiusX", {
+    label: "radius X",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
+  ellipsoidFolder.addBinding(oceanParams, "ellipsoidRadiusY", {
+    label: "radius Y",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
+  ellipsoidFolder.addBinding(oceanParams, "ellipsoidRadiusZ", {
+    label: "radius Z",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
+  const cuboidFolder = envelopeFolder.addFolder({
+    title: "Cuboid",
+    expanded: false,
+  });
+
+  cuboidFolder.addBinding(oceanParams, "cuboidWidth", {
+    label: "width",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
+  cuboidFolder.addBinding(oceanParams, "cuboidHeight", {
+    label: "height",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
+  cuboidFolder.addBinding(oceanParams, "cuboidDepth", {
+    label: "depth",
+    min: 0.1,
+    max: 3,
+    step: 0.05,
+  });
+
   const torusNoiseFolder = envelopeFolder.addFolder({
-    title: "Torus noise deform",
+    title: "Noise deform",
     expanded: false,
   });
 
@@ -258,4 +310,6 @@ export function setupOceanUI(page, oceanSystem) {
   envelopeFolder.on("change", sync);
   torusNoiseFolder.on("change", sync);
   torusKnotFolder.on("change", sync);
+  ellipsoidFolder.on("change", sync);
+  cuboidFolder.on("change", sync);
 }

@@ -31,6 +31,7 @@ import {
   PARTICLE_PARAM_KEYS,
   particleParams,
 } from "./particles/particleParams.js";
+import { applyEnvCycleState, captureEnvCycleState, resetEnvCycleParams } from "./env/envCycleState.js";
 
 export const STATE_VERSION = 8;
 const SUPPORTED_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -238,6 +239,7 @@ export function captureState({ scene, camera, controls }) {
     audio: pickAudioParams(audioParams),
     ocean: pickOceanParams(oceanParams),
     particles: pickParticleParams(particleParams),
+    envCycle: captureEnvCycleState(),
     scene: {
       environmentIntensity: scene.environmentIntensity,
       environmentRotationY: scene.environmentRotation.y,
@@ -344,14 +346,20 @@ async function applyStateInner(state, ctx, { silent = false } = {}) {
     particleParams.enabled = false;
   }
 
+  if (state.envCycle) {
+    applyEnvCycleState(state.envCycle);
+  } else {
+    resetEnvCycleParams();
+  }
+
   ctx.grainOverlay?.sync();
   ctx.ditherOverlay?.sync();
   ctx.stereoEffects?.sync();
   ctx.postProcessing?.sync();
   ctx.audioSystem?.stop({ preserveIntent: true });
 
-  const loadOpts = { silent, skipIntro: !!storedInitialCamera };
-  const loadTasks = [ctx.reloadEnvironment(loadOpts)];
+  const loadOpts = { skipIntro: !!storedInitialCamera };
+  const loadTasks = [ctx.reloadEnvironment()];
   if (!isNoModel(params.model)) {
     loadTasks.push(ctx.loadModel(params.model, loadOpts));
   } else {

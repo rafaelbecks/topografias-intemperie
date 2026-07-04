@@ -4,7 +4,7 @@ export const animationParams = {
   motionType: "sine",
   amplitude: 0.12,
   amplitudeModEnabled: false,
-  amplitudeModRate: 0.25,
+  amplitudeModRate: 0.08,
   frequency: 0.35,
   speed: 0.45,
   phaseSpread: 0.55,

@@ -7,6 +7,7 @@ import {
   MODEL_OPTIONS,
   params,
 } from "../config.js";
+import { exportContourShell } from "../model/shellExport.js";
 import { isNoModel } from "../modelUtils.js";
 import { setupOceanUI } from "../ocean/oceanUI.js";
 import { setupParticleUI } from "../particles/particleUI.js";
@@ -31,6 +32,7 @@ export function setupSceneTabUI(page, ctx) {
     controls,
     modelLoader,
     input,
+    terrainAnimation,
   } = ctx;
 
   let modelBinding;
@@ -39,7 +41,10 @@ export function setupSceneTabUI(page, ctx) {
 
   function reloadEnvironment() {
     const path = getEnvPath(params.environment, params.envFormat);
-    if (path) loadEnvironment(path, params.envFormat);
+    if (path) {
+      loadEnvironment(path, params.envFormat);
+      ctx.envCycle?.resume();
+    }
   }
 
   function setupEnvironmentControl() {
@@ -74,6 +79,20 @@ export function setupSceneTabUI(page, ctx) {
 
   modelFolder.addBinding(params, "wireframe", { label: "wireframe" }).on("change", (e) => {
     modelLoader.setWireframe(e.value);
+  });
+
+  modelFolder.addButton({ title: "Export shell (.glb)" }).on("click", async () => {
+    try {
+      const result = await exportContourShell({
+        model: modelLoader.getCurrentModel(),
+        modelName: params.model,
+        terrainAnimation,
+      });
+      if (!result.ok) alert(result.reason);
+    } catch (err) {
+      console.error(err);
+      alert(`Shell export failed: ${err.message}`);
+    }
   });
 
   if (ctx.particleSystem) {
@@ -173,6 +192,9 @@ export function setupSceneTabUI(page, ctx) {
         params.model = "none";
       }
       modelBinding?.refresh();
+    },
+    refreshEnvironmentBinding() {
+      envBinding?.refresh();
     },
   };
 }

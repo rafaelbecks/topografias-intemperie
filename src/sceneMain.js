@@ -13,6 +13,8 @@ import { createSensorClient } from "./sensor/sensorClient.js";
 import { createSensorController } from "./sensor/sensorController.js";
 import { sensorParams } from "./sensor/sensorConfig.js";
 import { setupNfcInput } from "./nfc/nfcInput.js";
+import { createEnvCycle } from "./env/envCycle.js";
+import { flushDeferredDisposals } from "./env/deferredDispose.js";
 import { SCENE_ORDER } from "./scenes.js";
 import { createTextOverlay } from "./text/textOverlay.js";
 import { createAudioSystem } from "./audio/audioSystem.js";
@@ -30,7 +32,7 @@ export async function bootSceneViewer(sceneName) {
 
   const loading = createLoading();
 
-  const sceneSystem = createSceneSystem({ loading });
+  const sceneSystem = createSceneSystem();
 
   const {
     scene,
@@ -40,6 +42,8 @@ export async function bootSceneViewer(sceneName) {
     light,
     ambient,
     loadEnvironment,
+    prepareEnvironmentFromPath,
+    applyPreparedEnvironment,
     clearEnvironment,
     setViewportSize,
   } = sceneSystem;
@@ -100,6 +104,12 @@ export async function bootSceneViewer(sceneName) {
     getModelBounds: () => modelLoader.getModelBounds(),
   });
 
+  const envCycle = createEnvCycle({
+    prepareEnvironmentFromPath,
+    applyPreparedEnvironment,
+    onEnvironmentChange: () => ui?.refreshEnvironmentBinding?.(),
+  });
+
   const ui = createUI({
     loadModel: modelLoader.loadModel,
     loadEnvironment,
@@ -126,6 +136,7 @@ export async function bootSceneViewer(sceneName) {
     stereoEffects,
     postProcessing,
     sceneFreeze,
+    envCycle,
   });
 
   setupNfcInput(sensorClient, {
@@ -139,8 +150,11 @@ export async function bootSceneViewer(sceneName) {
 
   const clock = new THREE.Clock();
 
+  renderer.domElement.style.visibility = "hidden";
+
   function animate() {
     requestAnimationFrame(animate);
+    flushDeferredDisposals();
     const delta = clock.getDelta();
     input.applyWalkMovement(delta);
     sensorController.update(delta);
@@ -150,6 +164,7 @@ export async function bootSceneViewer(sceneName) {
     controls.update();
     audioSystem.update();
     oceanSystem.update(delta);
+    envCycle.update(delta);
     stereoEffects.render(scene, camera);
     hasRendered = true;
     ditherOverlay.update();
@@ -163,5 +178,7 @@ export async function bootSceneViewer(sceneName) {
   }
 
   await ui.scenesUI.loadScene(sceneName);
+  envCycle.fillQueue?.();
+  renderer.domElement.style.visibility = "";
   animate();
 }

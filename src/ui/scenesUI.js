@@ -18,6 +18,13 @@ export function setupScenesUI(folder, ctx) {
   let currentScene = FRONT_SCENE;
   let dirHandle = null;
   let fileHandles = new Map();
+  const { envCycle } = ctx;
+
+  function notifySceneChange(name) {
+    const isFront = name === FRONT_SCENE;
+    envCycle?.setFrontScene(isFront);
+    ctx.ui?.refresh?.();
+  }
 
   const sceneOptions = Object.fromEntries(
     [FRONT_SCENE, ...SCENE_ORDER].map((name) => [name, name])
@@ -42,6 +49,7 @@ export function setupScenesUI(folder, ctx) {
 
   async function loadSelectedScene(name) {
     try {
+      envCycle?.stop();
       const handle = fileHandles.get(name);
       if (handle) {
         await loadSceneFromHandle(handle, ctx);
@@ -51,6 +59,7 @@ export function setupScenesUI(folder, ctx) {
       currentScene = name;
       sceneState.scene = name;
       sceneBinding?.refresh();
+      notifySceneChange(name);
     } catch (err) {
       console.error(err);
       alert(`Failed to load scene: ${err.message}`);

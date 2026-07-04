@@ -44,6 +44,10 @@ const COMMAND_GROUPS = [
     id: "oceanHumedal",
     words: ["humedal"],
   },
+  {
+    id: "oceanCueva",
+    words: ["cueva"],
+  },
 ];
 
 const DEFAULT_COMMAND_COOLDOWN_MS = 3000;
@@ -86,6 +90,7 @@ export function createSpeechCommandHandler(
     setOceanManglar,
     setOceanCienaga,
     setOceanHumedal,
+    setOceanCueva,
     loadLionzaModel,
   },
   { getCooldownMs = () => DEFAULT_COMMAND_COOLDOWN_MS } = {}
@@ -98,6 +103,7 @@ export function createSpeechCommandHandler(
     oceanManglar: setOceanManglar,
     oceanCienaga: setOceanCienaga,
     oceanHumedal: setOceanHumedal,
+    oceanCueva: setOceanCueva,
     lionza: loadLionzaModel,
   };
 

@@ -46,6 +46,12 @@ function geometryConfigKey(extent) {
     oceanParams.noiseScale,
     oceanParams.noiseSeed,
     oceanParams.envelopeRadius,
+    oceanParams.ellipsoidRadiusX,
+    oceanParams.ellipsoidRadiusY,
+    oceanParams.ellipsoidRadiusZ,
+    oceanParams.cuboidWidth,
+    oceanParams.cuboidHeight,
+    oceanParams.cuboidDepth,
     oceanParams.torusTube,
     oceanParams.torusKnotRadius,
     oceanParams.torusKnotTube,
@@ -245,7 +251,7 @@ export function createOceanSystem({ scene, getModelBounds }) {
       return { ok: false, reason: "Enable the ocean envelope first." };
     }
     if (!DEFORMABLE_ENVELOPE_SHAPES.has(oceanParams.shape)) {
-      return { ok: false, reason: "Switch to torus or torus knot shape first." };
+      return { ok: false, reason: "Switch to a deformable envelope shape first." };
     }
 
     const bounds = getModelBounds?.();

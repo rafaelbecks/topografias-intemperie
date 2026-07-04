@@ -100,4 +100,6 @@ export const MODEL_OPTIONS = [
   { text: "Macizo del pez erosionado", value: "cart15" },
   { text: "Organic model", value: "organic_model" },
   { text: "María Lionza", value: "lionza" },
+  { text: "Shell 2", value: "shell2" },
+  { text: "Shell 4", value: "shell4" },
 ];

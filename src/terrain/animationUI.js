@@ -56,7 +56,7 @@ export function setupAnimationUI(page, terrainAnimation, pane) {
   motionFolder.addBinding(animationParams, "amplitudeModEnabled", { label: "amplitude mod" });
   motionFolder.addBinding(animationParams, "amplitudeModRate", {
     label: "mod rate",
-    min: 0.05,
+    min: 0.01,
     max: 2,
     step: 0.01,
   });

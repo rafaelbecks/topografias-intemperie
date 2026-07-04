@@ -63,5 +63,23 @@ export function applyOceanFlatNoise(oceanSystem) {
   oceanSystem.sync();
 }
 
+/** cueva → ellipsoid at full radius with full noise deformation */
+export function applyOceanCueva(oceanSystem) {
+  ensureOceanEnabled();
+  oceanParams.shape = "ellipsoid";
+  oceanParams.envelopeRadius = 30;
+  oceanParams.ellipsoidRadiusX = 1;
+  oceanParams.ellipsoidRadiusY = 1;
+  oceanParams.ellipsoidRadiusZ = 1;
+  oceanParams.torusNoiseEnabled = true;
+  oceanParams.torusNoiseAmplitude = 1;
+  oceanParams.torusNoiseScale = 6;
+  oceanParams.torusNoiseOctaves = 5;
+  oceanParams.torusNoiseSeed = Math.floor(Math.random() * 10000);
+  clearEnvelopeRotation();
+  oceanSystem.sync();
+  oceanSystem.snapTorusNoiseMix?.(1);
+}
+
 /** No-op kept for scene load compatibility. */
 export function resetOceanShapeCycle() {}
