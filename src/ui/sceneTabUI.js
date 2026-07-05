@@ -41,10 +41,7 @@ export function setupSceneTabUI(page, ctx) {
 
   function reloadEnvironment() {
     const path = getEnvPath(params.environment, params.envFormat);
-    if (path) {
-      loadEnvironment(path, params.envFormat);
-      ctx.envCycle?.resume();
-    }
+    if (path) loadEnvironment(path, params.envFormat);
   }
 
   function setupEnvironmentControl() {
@@ -192,9 +189,6 @@ export function setupSceneTabUI(page, ctx) {
         params.model = "none";
       }
       modelBinding?.refresh();
-    },
-    refreshEnvironmentBinding() {
-      envBinding?.refresh();
     },
   };
 }

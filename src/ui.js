@@ -29,15 +29,14 @@ import {
 } from "./ocean/oceanShapeCycle.js";
 import { speechParams } from "./speech/speechParams.js";
 import { FRONT_SCENE, SCENE_ORDER } from "./scenes.js";
-import { setupEnvCycleUI } from "./env/envCycleUI.js";
 
 export function createUI(ctx) {
   const { loadModel, loadEnvironment, scene, camera, controls, terrainAnimation, grainOverlay } =
     ctx;
 
-  function reloadEnvironment() {
+  function reloadEnvironment(opts) {
     const path = getEnvPath(params.environment, params.envFormat);
-    if (path) return loadEnvironment(path, params.envFormat);
+    if (path) return loadEnvironment(path, params.envFormat, opts);
     return Promise.resolve();
   }
 
@@ -86,7 +85,6 @@ export function createUI(ctx) {
     ui: { refresh: () => refresh() },
     reloadEnvironment,
     loadModel,
-    envCycle: ctx.envCycle,
   });
 
   const tab = pane.addTab({
@@ -105,22 +103,9 @@ export function createUI(ctx) {
 
   const sceneTab = setupSceneTabUI(scenePage, ctx);
 
-  let envCycleUI;
-  if (ctx.envCycle) {
-    envCycleUI = setupEnvCycleUI(scenePage, ctx.envCycle, {
-      isFrontScene: () => scenesUI.currentScene() === FRONT_SCENE,
-    });
-    envCycleUI.refreshVisibility();
-  }
-
-  function refreshEnvironmentBinding() {
-    sceneTab.refreshEnvironmentBinding?.();
-  }
-
   function refresh() {
     sceneTab.setupEnvironmentControl();
     sceneTab.refreshModelBlade();
-    envCycleUI?.refreshVisibility();
     pane.refresh();
     grainOverlay.sync();
     ctx.ditherOverlay?.sync();
@@ -141,6 +126,10 @@ export function createUI(ctx) {
   if (ctx.postProcessing) {
     orderedDitherUI = setupOrderedDitherUI(pane, ctx.postProcessing, ctx.stereoEffects);
     ctx.orderedDitherUI = orderedDitherUI;
+  }
+
+  if (ctx.stereoEffects) {
+    setupStereoUI(pane, ctx.stereoEffects, () => orderedDitherUI?.refresh());
   }
 
   if (ctx.textOverlay) {
@@ -262,5 +251,5 @@ export function createUI(ctx) {
     onSceneSelect: (name) => scenesUI.loadScene(name),
   });
 
-  return { pane, refresh, refreshEnvironmentBinding, reloadEnvironment, sensorUI, paneToggle, scenesUI, envCycleUI };
+  return { pane, refresh, reloadEnvironment, sensorUI, paneToggle, scenesUI };
 }

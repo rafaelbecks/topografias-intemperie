@@ -3,9 +3,8 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { params } from "./config.js";
-import { deferDispose } from "./env/deferredDispose.js";
 
-export function createSceneSystem() {
+export function createSceneSystem({ loading } = {}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111111);
 
@@ -52,116 +51,62 @@ export function createSceneSystem() {
   const rgbeLoader = new RGBELoader();
   const exrLoader = new EXRLoader();
   let currentEnvMap = null;
-  let currentEquirect = null;
 
-  function buildEnvMapFromEquirect(texture) {
-    return pmrem.fromEquirectangular(texture).texture;
-  }
+  function applyEnvironmentTexture(texture) {
+    const envMap = pmrem.fromEquirectangular(texture).texture;
 
-  const pmremJobs = [];
-  let pmremFrameScheduled = false;
-
-  function schedulePmremWork(fn) {
-    return new Promise((resolve, reject) => {
-      pmremJobs.push(() => {
-        try {
-          resolve(fn());
-        } catch (err) {
-          reject(err);
-        }
-      });
-      if (!pmremFrameScheduled) {
-        pmremFrameScheduled = true;
-        requestAnimationFrame(runPmremJobs);
-      }
-    });
-  }
-
-  function runPmremJobs() {
-    pmremFrameScheduled = false;
-    const job = pmremJobs.shift();
-    if (job) job();
-    if (pmremJobs.length > 0) {
-      pmremFrameScheduled = true;
-      requestAnimationFrame(runPmremJobs);
-    }
-  }
-
-  function applyEnvironmentMaps(envMap, equirect, { disposePrevious = true } = {}) {
     scene.environment = envMap;
     scene.background = envMap;
     scene.backgroundBlurriness = params.bgBlur;
     scene.backgroundIntensity = 1;
 
-    if (disposePrevious) {
-      if (currentEnvMap && currentEnvMap !== envMap) deferDispose(currentEnvMap);
-      if (currentEquirect && currentEquirect !== equirect) deferDispose(currentEquirect);
-    }
-
+    if (currentEnvMap) currentEnvMap.dispose();
     currentEnvMap = envMap;
-    currentEquirect = equirect;
     light.intensity = 0;
     ambient.intensity = 0;
-  }
-
-  function applyEnvironmentTexture(texture) {
-    const envMap = buildEnvMapFromEquirect(texture);
-    applyEnvironmentMaps(envMap, texture);
-  }
-
-  function applyPreparedEnvironment({ equirect, envMap }) {
-    applyEnvironmentMaps(envMap, equirect);
-  }
-
-  function loadEnvironmentTexture(path, format = "hdr") {
-    if (!path) return Promise.resolve(null);
-
-    const loader = format === "exr" ? exrLoader : rgbeLoader;
-    return new Promise((resolve, reject) => {
-      loader.load(path, resolve, undefined, reject);
-    });
-  }
-
-  function prepareEnvironmentFromPath(path, format = "hdr") {
-    return loadEnvironmentTexture(path, format).then((equirect) => {
-      if (!equirect) return null;
-      return schedulePmremWork(() => ({
-        equirect,
-        envMap: buildEnvMapFromEquirect(equirect),
-      }));
-    });
+    texture.dispose();
   }
 
   let envLoadId = 0;
 
-  function loadEnvironment(path, format = "hdr") {
+  function loadEnvironment(path, format = "hdr", { silent = false } = {}) {
     if (!path) return Promise.resolve();
 
     const id = ++envLoadId;
+    const loader = format === "exr" ? exrLoader : rgbeLoader;
 
-    return loadEnvironmentTexture(path, format)
-      .then((texture) => {
-        if (id !== envLoadId) return null;
-        if (texture) applyEnvironmentTexture(texture);
-        return texture;
-      })
-      .catch((err) => {
-        console.error(err);
-        throw err;
-      });
+    return new Promise((resolve, reject) => {
+      if (!silent) loading?.begin("environment");
+
+      loader.load(
+        path,
+        (texture) => {
+          if (id !== envLoadId) {
+            if (!silent) loading?.end("environment");
+            resolve(null);
+            return;
+          }
+          applyEnvironmentTexture(texture);
+          if (!silent) loading?.end("environment");
+          resolve(texture);
+        },
+        (xhr) => {
+          if (!silent && xhr.total) {
+            loading?.setProgress(xhr.loaded / xhr.total);
+          }
+        },
+        (err) => {
+          if (id === envLoadId && !silent) loading?.end("environment");
+          console.error(err);
+          reject(err);
+        }
+      );
+    });
   }
 
   function clearEnvironment() {
     scene.environment = null;
     scene.background = new THREE.Color(0x111111);
-    if (currentEnvMap) {
-      deferDispose(currentEnvMap);
-      currentEnvMap = null;
-    }
-    if (currentEquirect) {
-      deferDispose(currentEquirect);
-      currentEquirect = null;
-    }
     light.intensity = params.lightIntensity;
     ambient.intensity = params.ambient;
   }
@@ -184,9 +129,6 @@ export function createSceneSystem() {
     light,
     ambient,
     loadEnvironment,
-    loadEnvironmentTexture,
-    prepareEnvironmentFromPath,
-    applyPreparedEnvironment,
     clearEnvironment,
     setViewportSize(fn) {
       setViewportSize = fn;
