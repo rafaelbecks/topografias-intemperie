@@ -1,16 +1,22 @@
 # Topografías de la intemperie
 
-Software de composición para la obra **Topografías de la intemperie**, instalación interactiva desarrollada en el marco de la [Maestría en Artes Electrónicas](https://untref.edu.ar/posgrado/maestria-en-artes-electronicas) de la Universidad Nacional de Tres de Febrero (UNTREF).
+Software de composición para la obra **Topografías de la intemperie**, instalación interactiva desarrollada en el marco de la Maestría en Artes Electrónicas de la Universidad Nacional Tres de Febrero (UNTREF).
 
 > Topografías de la intemperie es una instalación interactiva que construye territorios imaginarios a partir de memorias espaciales deformadas. Paisajes virtuales navegables donde geografía, sonido, lenguaje e interacción convergen para producir una experiencia perceptiva inestable.
 
 Este repositorio concentra las herramientas para armar esas escenas: extrusión de topografías en Blender, el visor Three.js de composición/navegación, mapas de entorno y escenas exportables a JSON.
 
 
-| | |
-|:---:|:---:|
-| ![Composición 1](screenshots/composition-01.png) | ![Composición 2](screenshots/composition-02.png) |
-| ![Composición 3](screenshots/composition-03.png) | ![Composición 4](screenshots/composition-04.png) |
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/composition-01.png" alt="Composición 1" width="100%" /></td>
+    <td width="50%"><img src="screenshots/composition-02.png" alt="Composición 2" width="100%" /></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/composition-03.png" alt="Composición 3" width="100%" /></td>
+    <td width="50%"><img src="screenshots/composition-04.png" alt="Composición 4" width="100%" /></td>
+  </tr>
+</table>
 
 ### Visor 3D
 
