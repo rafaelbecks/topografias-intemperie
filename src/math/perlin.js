@@ -104,6 +104,7 @@ export function createPerlin3D(seed = 0) {
   };
 }
 
+//fractal brownian motion 2D
 export function sampleFbm2(noise2d, x, y, octaves = 3) {
   let value = 0;
   let amp = 1;
@@ -120,6 +121,7 @@ export function sampleFbm2(noise2d, x, y, octaves = 3) {
   return value / totalAmp;
 }
 
+//fractal brownian motion 3D
 export function sampleFbm3(noise3d, x, y, z, octaves = 3) {
   let value = 0;
   let amp = 1;

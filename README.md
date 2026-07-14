@@ -1,8 +1,29 @@
-# Topografías del desarraigo
+# Topografías de la intemperie
 
-Entorno virtual de memoria deformada.
+Software de composición para la obra **Topografías de la intemperie**, instalación interactiva desarrollada en el marco de la [Maestría en Artes Electrónicas](https://untref.edu.ar/posgrado/maestria-en-artes-electronicas) de la Universidad Nacional de Tres de Febrero (UNTREF).
 
-### Script de Blender (`extrude_curves.py`)
+> Topografías de la intemperie es una instalación interactiva que construye territorios imaginarios a partir de memorias espaciales deformadas. Paisajes virtuales navegables donde geografía, sonido, lenguaje e interacción convergen para producir una experiencia perceptiva inestable.
+
+Este repositorio concentra las herramientas para armar esas escenas: extrusión de topografías en Blender, el visor Three.js de composición/navegación, mapas de entorno y escenas exportables a JSON.
+
+
+| | |
+|:---:|:---:|
+| ![Composición 1](screenshots/composition-01.png) | ![Composición 2](screenshots/composition-02.png) |
+| ![Composición 3](screenshots/composition-03.png) | ![Composición 4](screenshots/composition-04.png) |
+
+### Visor 3D
+
+Visor Three.js que **arma y navega escenas** a partir de modelos GLB, mapas de entorno, agua, texto, audio espacial y efectos (grain, dither). El panel lateral (Tweakpane) organiza la composición en pestañas **Scene / Animation / Text / Audio**, con estados exportables a JSON.
+
+```bash
+npm install
+npm run start
+```
+
+Guía del panel, pestañas y navegación: **[docs/visor.md](docs/visor.md)**.
+
+### Script para Blender (`extrude_curves.py`)
 
 Extruye curvas SVG importadas en Blender con un perfil de altura dinámico (coseno).
 
@@ -16,14 +37,6 @@ exec(open("/path/to/extrude_curves.py").read())
 - `TOP_CURVE` / `BOTTOM_CURVE` — rango de curvas a procesar
 - `COMPENSATE_CENTER` — centra verticalmente cada curva
 
-### Visor (`index.html`)
-
-Visor Three.js para modelos GLB exportados.
-
-```bash
-npm install
-npm run start
-```
 
 #### Environment maps (EXR)
 
@@ -51,19 +64,17 @@ oiiotool <source> \
   -o env/exr/<name>_env.exr
 ```
 
-Tras la conversión, reinicia el visor y elige **env type → EXR** en Tweakpane para usar los nuevos mapas.
+#### Sensores
 
-#### Estado de escena
+El visor se conecta a un sistema externo de sensores a través de **[ardeidae](https://github.com/rafaelbecks/ardeidae)** . Ese proceso agrega IMU (Inertial Measurement Unit), lidar y NFC y reenvía lecturas por **WebSocket** (`ws://127.0.0.1:8080`). El visor abre esa conexión al arrancar.
 
-En el visor, usa **State → Export JSON** / **Load JSON** (sobre las pestañas Scene/Animation) para guardar y restaurar la configuración (modelo, iluminación, entorno, cámara, animación del terreno, grain overlay, etc.). Las exportaciones se nombran `memory-{timestamp}.json`. Escenas predefinidas en `scenes/` (disensión, inefable, cuerda, ventanas, ciénaga).
+| Sensor | Rol en la obra |
+| --- | --- |
+| **Acelerómetro / IMU** (WITMotion vía BLE) | Orienta el modelo o la cámara: rotar el “mineral” o el punto de vista según la pose del dispositivo. |
+| **TF-Luna (lidar)** | Distancia del visitante → zoom / acercamiento de la órbita (proximidad como profundidad). |
+| **NFC (PN532)** | Tarjetas de memoria: al acercar una tarjeta se carga una escena (equivalente a las teclas `1`–`N`). Firmware Arduino: [`nfc_reader.ino`](./nfc_reader.ino/nfc_reader.ino.ino). |
 
-**Atajos:** `Ctrl+I` (o `Cmd+I` en macOS) muestra u oculta el panel de controles.
-
-**Grain overlay** usa [grained.js](https://github.com/sarathsaleem/grained) (MIT) — actívalo en la carpeta **Grain overlay** al final del panel de controles.
-
-#### Sensor (IMU + NFC)
-
-Controlador IMU y tarjetas NFC por WebSocket (`ws://127.0.0.1:8080`). El visor se conecta al arrancar; las tarjetas NFC (vía [ardeidae](../ardeidae)) envían `/nfc/card` y cargan escenas como las teclas 1–4. Configura el puerto serial y UIDs en `ardeidae/src/config.js`.
+Configuración de puertos seriales, mapeo UID → índice de tarjeta y transporte WS están en ardeidae (`src/config.js`). Para instalación, calibración y detalles de OSC/WS, ver el [README de ardeidae](https://github.com/rafaelbecks/ardeidae).
 
 ## Autor
 
