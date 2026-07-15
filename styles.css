@@ -1,52 +1,8 @@
 body { margin: 0; overflow: hidden; background: #111; }
 
-body.front-page {
-  background-color: #000;
-  background-attachment: fixed;
-}
-
-body.front-page #panel-toggle,
-body.front-page #side-panel,
-body.front-page #position {
-  display: none;
-}
-
 body.scene-viewer {
   background: #111;
 }
-
-#front-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100dvh;
-  padding: 24px;
-  box-sizing: border-box;
-  perspective: 900px;
-}
-
-.front-heading {
-  transform-style: preserve-3d;
-}
-
-.front-title {
-  margin: 0;
-  font-family: "Ovo", serif;
-  font-size: var(--front-font-size, 300px);
-  font-weight: 400;
-  text-align: center;
-  letter-spacing: var(--front-letter-spacing, -0.07em);
-  color: transparent;
-  -webkit-text-stroke: var(--front-stroke-width, 3px) var(--front-stroke-color, #005016);
-  paint-order: stroke fill;
-  user-select: none;
-  transform-style: preserve-3d;
-}
-
-.front-title__line {
-  display: block;
-}
-
 
 canvas {
   display: block;

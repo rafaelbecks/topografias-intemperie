@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 660" width="960" height="660" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitectura de audio � Howler.js</title>
+  <desc id="desc">Diagrama t�cnico de la mezcla de dos buses: entorno no espacial y objeto espacial anclado al GLB.</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#6b7280"/>
+    </marker>
+    <style>
+      .title { font: 650 16px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #141414; }
+      .subtitle { font: 400 11px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #6b7280; }
+      .section { font: 600 11px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #374151; letter-spacing: 0.02em; }
+      .box-title { font: 600 12px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #141414; }
+      .box-line { font: 400 11px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #4b5563; }
+      .label-env { font: 650 12px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #2E76AB; }
+      .label-obj { font: 650 12px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #C06028; }
+      .note { font: 400 11px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #6b7280; }
+      .source { font: 400 10px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #9ca3af; }
+      .arrow-label { font: 400 10px ui-sans-serif, system-ui, -apple-system, sans-serif; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <rect width="960" height="660" fill="#ffffff"/>
+
+  <text class="title" x="20" y="36">Arquitectura de audio � Howler.js (mezcla de dos buses)</text>
+  <text class="subtitle" x="20" y="54">createAudioSystem � actualizado cada frame con la c�mara y la ra�z del GLB</text>
+
+  <g id="params">
+    <rect x="20" y="74" width="280" height="88" rx="6" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+    <text class="box-title" x="32" y="96">Par�metros / escena</text>
+    <text class="box-line" x="32" y="116">audioParams � state.audio (JSON)</text>
+    <text class="box-line" x="32" y="132">Tweakpane ? play / stop / sync</text>
+  </g>
+
+  <line x1="300" y1="118" x2="328" y2="118" stroke="#6b7280" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+  <g id="unlock">
+    <rect x="340" y="74" width="280" height="88" rx="6" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="box-title" x="352" y="96">Desbloqueo (gesto)</text>
+    <text class="box-line" x="352" y="116">unlockAudioFromUserGesture</text>
+    <text class="box-line" x="352" y="132">Howler.ctx.resume()</text>
+  </g>
+
+  <line x1="620" y1="118" x2="648" y2="118" stroke="#6b7280" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+  <g id="system">
+    <rect x="660" y="74" width="280" height="88" rx="6" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1.75"/>
+    <text class="box-title" x="672" y="96">Sistema</text>
+    <text class="box-line" x="672" y="116">createAudioSystem</text>
+    <text class="box-line" x="672" y="132">play � stop � sync � update</text>
+  </g>
+
+  <text class="section" x="20" y="198">MEZCLA (dos ganancias independientes � sin master / crossfade)</text>
+
+  <g id="bus-entorno">
+    <rect x="20" y="212" width="440" height="200" rx="8" fill="#f8fafc" stroke="#2E76AB" stroke-width="1.5"/>
+    <text class="label-env" x="34" y="232">Bus entorno (ambiente)</text>
+
+    <rect x="36" y="246" width="190" height="72" rx="6" fill="#ffffff" stroke="#2E76AB" stroke-width="1.5"/>
+    <text class="box-title" x="48" y="268">ENV_SOUNDS</text>
+    <text class="box-line" x="48" y="288">./audio/env/*.wav</text>
+    <text class="box-line" x="48" y="304">envSound</text>
+
+    <line x1="226" y1="282" x2="248" y2="282" stroke="#6b7280" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="250" y="246" width="190" height="72" rx="6" fill="#ffffff" stroke="#2E76AB" stroke-width="1.5"/>
+    <text class="box-title" x="262" y="268">envHowl</text>
+    <text class="box-line" x="262" y="288">html5: true � loop: true</text>
+    <text class="box-line" x="262" y="304">no panor�mico</text>
+
+    <rect x="36" y="334" width="404" height="60" rx="6" fill="#ffffff" stroke="#2E76AB" stroke-width="1.5"/>
+    <text class="box-title" x="48" y="356">Ganancia: envVolume (0�1, default 0.35)</text>
+    <text class="box-line" x="48" y="376">envHowl.volume(envVolume) � volumen a nivel del Howl</text>
+  </g>
+
+  <g id="bus-objeto">
+    <rect x="500" y="212" width="440" height="200" rx="8" fill="#fffaf5" stroke="#C06028" stroke-width="1.5"/>
+    <text class="label-obj" x="514" y="232">Bus objeto (espacial)</text>
+
+    <rect x="516" y="246" width="190" height="72" rx="6" fill="#ffffff" stroke="#C06028" stroke-width="1.5"/>
+    <text class="box-title" x="528" y="268">OBJECT_SOUNDS</text>
+    <text class="box-line" x="528" y="288">./audio/object/*.wav</text>
+    <text class="box-line" x="528" y="304">objectSound</text>
+
+    <line x1="706" y1="282" x2="728" y2="282" stroke="#6b7280" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="730" y="246" width="190" height="72" rx="6" fill="#ffffff" stroke="#C06028" stroke-width="1.5"/>
+    <text class="box-title" x="742" y="268">FadeLoopPlayer</text>
+    <text class="box-line" x="742" y="288">Web Audio � loop manual</text>
+    <text class="box-line" x="742" y="304">fade al relanzar</text>
+
+    <rect x="516" y="334" width="404" height="60" rx="6" fill="#ffffff" stroke="#C06028" stroke-width="1.5"/>
+    <text class="box-title" x="528" y="356">Ganancia: objectVolume + sensibilidad</text>
+    <text class="box-line" x="528" y="376">howl.volume � pannerAttr HRTF (refDistance / rolloff)</text>
+  </g>
+
+  <text class="section" x="20" y="448">ESPACIALIZACI�N (cada frame en animate)</text>
+
+  <g id="listener">
+    <rect x="20" y="462" width="280" height="88" rx="6" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+    <text class="box-title" x="32" y="484">C�mara Three.js ? oyente</text>
+    <text class="box-line" x="32" y="504">Howler.pos(c�mara)</text>
+    <text class="box-line" x="32" y="520">Howler.orientation(forward, up)</text>
+  </g>
+
+  <line x1="300" y1="506" x2="328" y2="506" stroke="#6b7280" stroke-width="1.25" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="306" y="498">relativo a</text>
+
+  <g id="source">
+    <rect x="340" y="462" width="280" height="88" rx="6" fill="#ffffff" stroke="#C06028" stroke-width="1.5"/>
+    <text class="box-title" x="352" y="484">Ra�z del GLB ? fuente</text>
+    <text class="box-line" x="352" y="504">bindModel(model)</text>
+    <text class="box-line" x="352" y="520">model.getWorldPosition ? howl.pos</text>
+  </g>
+
+  <line x1="620" y1="506" x2="648" y2="506" stroke="#6b7280" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+  <g id="hrtf">
+    <rect x="660" y="462" width="280" height="88" rx="6" fill="#ffffff" stroke="#C06028" stroke-width="1.5"/>
+    <text class="box-title" x="672" y="484">Percepci�n binaural</text>
+    <text class="box-line" x="672" y="504">panningModel: HRTF</text>
+    <text class="box-line" x="672" y="520">distanceModel: inverse</text>
+  </g>
+
+  <text class="note" x="20" y="584">El entorno permanece no espacial (HTML5). Solo el bus objeto se ancla a la posici�n mundial de la ra�z del modelo GLB.</text>
+  <text class="note" x="20" y="604">Sensibilidad ? ? refDistance ? y rolloffFactor ? (ca�da m�s pronunciada con la distancia).</text>
+  <text class="source" x="20" y="632">Fuente: src/audio/audioSystem.js � howler@2.2.4 � Topograf�as de la intemperie</text>
+</svg>

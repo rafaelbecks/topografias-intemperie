@@ -22,7 +22,6 @@ import { createStereoEffects } from "./stereo/stereoEffects.js";
 import { createPostProcessing } from "./postprocessing/createPostProcessing.js";
 
 export async function bootSceneViewer(sceneName) {
-  document.body.classList.remove("front-page");
   document.body.classList.add("scene-viewer");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#111111");
 

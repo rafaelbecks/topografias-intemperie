@@ -27,7 +27,13 @@ npm install
 npm run start
 ```
 
-Guía del panel, pestañas y navegación: **[docs/visor.md](docs/visor.md)**.
+Guía del panel, pestañas y navegación: **[docs/visor.md](docs/visor.md)**. Arquitectura: ** [diagrama](docs/arquitectura-dark.svg).
+
+### Audio
+
+Mezcla Howler de dos buses: **entorno** (HTML5, loop, no espacial) y **objeto** (Web Audio + HRTF anclado a la raíz del GLB; la cámara es el oyente). Parámetros en la pestaña Audio / JSON de escena (`envVolume`, `objectVolume`, `sensitivity`).
+
+Diagrama: [docs/audio-arquitectura-dark.svg](docs/audio-arquitectura-dark.svg)
 
 ### Script para Blender (`extrude_curves.py`)
 

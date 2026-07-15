@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 820" width="960" height="820" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitectura general — Topografías de la intemperie (dark)</title>
+  <desc id="desc">Flujo técnico: assets y entradas hacia el Visor Three.js y sus salidas; zoom del animation frame. Tema oscuro.</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#E4E4E45E"/>
+    </marker>
+    <marker id="arrowAccent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#599CE7"/>
+    </marker>
+    <style type="text/css"><![CDATA[
+      .title { font: 650 16px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E4EB; }
+      .subtitle { font: 400 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E45E; }
+      .section { font: 650 12px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .box-title { font: 600 12px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E4EB; }
+      .box-line { font: 400 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E48D; }
+      .note { font: 400 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E45E; }
+      .idea { font: 400 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E48D; }
+      .arrow-label { font: 400 10px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #E4E4E45E; }
+      .loop-label { font: 600 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #599CE7; }
+      .c-assets { fill: #7BAFE9; }
+      .c-inputs { fill: #DD7F76; }
+      .c-runtime { fill: #599CE7; }
+      .c-output { fill: #3FA266; }
+    ]]></style>
+  </defs>
+
+  <rect width="960" height="820" fill="#181818"/>
+
+  <!-- ========== DIAGRAMA PRINCIPAL ========== -->
+  <text class="title" x="20" y="36">Flujo técnico — entradas, runtime y salidas</text>
+  <text class="subtitle" x="20" y="54">Assets + interacción → Visor Three.js → pantalla, sonido y JSON state</text>
+
+  <!-- Assets -->
+  <g id="assets">
+    <rect x="20" y="72" width="280" height="120" rx="8" fill="#E4E4E40A" stroke="#7BAFE9" stroke-width="1.5"/>
+    <text class="section c-assets" x="34" y="92">Assets</text>
+    <rect x="34" y="104" width="252" height="70" rx="6" fill="#E4E4E41E" stroke="#7BAFE9" stroke-width="1.5"/>
+    <text class="box-title" x="46" y="126">Biblioteca de memoria</text>
+    <text class="box-line" x="46" y="146">GLB · EXR/HDR · WAV</text>
+    <text class="box-line" x="46" y="162">JSON state en scenes/</text>
+  </g>
+
+  <!-- Entradas -->
+  <g id="entradas">
+    <rect x="20" y="212" width="280" height="280" rx="8" fill="#E4E4E40A" stroke="#DD7F76" stroke-width="1.5"/>
+    <text class="section c-inputs" x="34" y="232">Entradas</text>
+
+    <rect x="34" y="244" width="252" height="70" rx="6" fill="#E4E4E41E" stroke="#DD7F76" stroke-width="1.5"/>
+    <text class="box-title" x="46" y="266">ardeidae (WebSocket)</text>
+    <text class="box-line" x="46" y="286">IMU · lidar TF-Luna · NFC</text>
+    <text class="box-line" x="46" y="302">ws://127.0.0.1:8080</text>
+
+    <rect x="34" y="326" width="120" height="70" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="46" y="348">Teclado / ratón</text>
+    <text class="box-line" x="46" y="368">órbita, zoom</text>
+    <text class="box-line" x="46" y="384">atajos 0–N</text>
+
+    <rect x="166" y="326" width="120" height="70" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="178" y="348">Voz (PoC)</text>
+    <text class="box-line" x="178" y="368">Web Speech API</text>
+    <text class="box-line" x="178" y="384">comandos</text>
+
+    <rect x="34" y="408" width="252" height="68" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1" stroke-dasharray="5 3"/>
+    <text class="box-title" x="46" y="430">Panel Tweakpane</text>
+    <text class="box-line" x="46" y="450">Scene · Animation · Text · Audio</text>
+    <text class="box-line" x="46" y="466">Export / Load JSON state</text>
+  </g>
+
+  <!-- Visor runtime -->
+  <g id="visor">
+    <rect x="330" y="72" width="340" height="420" rx="8" fill="#E4E4E40A" stroke="#599CE7" stroke-width="1.75"/>
+    <text class="section c-runtime" x="344" y="92">Visor Three.js (runtime)</text>
+
+    <rect x="344" y="104" width="312" height="56" rx="6" fill="#E4E4E41E" stroke="#599CE7" stroke-width="1.75"/>
+    <text class="box-title" x="356" y="126">Estado de composición</text>
+    <text class="box-line" x="356" y="146">JSON state · loadScene / export</text>
+
+    <rect x="344" y="172" width="152" height="100" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="356" y="194">Escena 3D</text>
+    <text class="box-line" x="356" y="214">modelo / terreno</text>
+    <text class="box-line" x="356" y="230">océano · texto</text>
+    <text class="box-line" x="356" y="246">partículas · luces</text>
+    <text class="box-line" x="356" y="262">entorno EXR</text>
+
+    <rect x="504" y="172" width="152" height="100" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="516" y="194">Audio Howler</text>
+    <text class="box-line" x="516" y="214">bus entorno (HTML5)</text>
+    <text class="box-line" x="516" y="230">bus objeto (HRTF)</text>
+    <text class="box-line" x="516" y="246">oyente = cámara</text>
+
+    <rect x="344" y="286" width="152" height="88" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="356" y="308">Cámara / input</text>
+    <text class="box-line" x="356" y="328">OrbitControls</text>
+    <text class="box-line" x="356" y="344">primera persona</text>
+    <text class="box-line" x="356" y="360">sensor → pose / zoom</text>
+
+    <rect x="504" y="286" width="152" height="88" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="516" y="308">Efectos</text>
+    <text class="box-line" x="516" y="328">grain · dither SVG</text>
+    <text class="box-line" x="516" y="344">ordered dither GPU</text>
+    <text class="box-line" x="516" y="360">stereo / anaglifo</text>
+
+    <rect x="344" y="388" width="312" height="88" rx="6" fill="#E4E4E41E" stroke="#599CE7" stroke-width="1.75"/>
+    <text class="box-title" x="356" y="410">Animation frame</text>
+    <text class="box-line" x="356" y="430">requestAnimationFrame — ver zoom abajo</text>
+    <text class="box-line" x="356" y="446">actualizar → renderizar → overlays</text>
+  </g>
+
+  <!-- Salidas -->
+  <g id="salidas">
+    <rect x="700" y="72" width="240" height="420" rx="8" fill="#E4E4E40A" stroke="#3FA266" stroke-width="1.5"/>
+    <text class="section c-output" x="714" y="92">Salidas</text>
+
+    <rect x="714" y="104" width="212" height="120" rx="6" fill="#E4E4E41E" stroke="#3FA266" stroke-width="1.5"/>
+    <text class="box-title" x="726" y="126">Pantalla</text>
+    <text class="box-line" x="726" y="146">WebGL (Three.js)</text>
+    <text class="box-line" x="726" y="162">postproceso ordered dither</text>
+    <text class="box-line" x="726" y="178">overlays grain + dither</text>
+    <text class="box-line" x="726" y="194">opcional: stereo / anaglifo</text>
+
+    <rect x="714" y="240" width="212" height="88" rx="6" fill="#E4E4E41E" stroke="#3FA266" stroke-width="1.5"/>
+    <text class="box-title" x="726" y="262">Sonido</text>
+    <text class="box-line" x="726" y="282">Howler: HTML5 (ambiente)</text>
+    <text class="box-line" x="726" y="298">Web Audio + HRTF (objeto)</text>
+
+    <rect x="714" y="344" width="212" height="88" rx="6" fill="#E4E4E41E" stroke="#E4E4E433" stroke-width="1"/>
+    <text class="box-title" x="726" y="366">Persistencia</text>
+    <text class="box-line" x="726" y="386">memory-*.json exportado</text>
+    <text class="box-line" x="726" y="402">JSON state en scenes/</text>
+  </g>
+
+  <!-- Flechas principales -->
+  <line x1="300" y1="132" x2="328" y2="132" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+  <text class="arrow-label" x="302" y="124">carga</text>
+  <line x1="300" y1="336" x2="328" y2="336" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+  <line x1="670" y1="296" x2="698" y2="296" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+  <text class="note" x="20" y="520">Fuente: src/sceneMain.js, módulos en src/ · alto nivel</text>
+  <text class="idea" x="20" y="540">Un JSON state describe una memoria espacial. El visor la reconstruye en capas y la anima cada frame; Tweakpane edita esa composición.</text>
+
+  <!-- ========== ANIMATION FRAME ZOOM ========== -->
+  <text class="title" x="20" y="580">Animation frame — un ciclo de requestAnimationFrame</text>
+  <text class="subtitle" x="20" y="598">Orden aproximado en bootSceneViewer · delta de THREE.Clock</text>
+
+  <g id="af-steps">
+    <rect x="20" y="616" width="138" height="72" rx="6" fill="#E4E4E41E" stroke="#DD7F76" stroke-width="1.5"/>
+    <text class="box-title" x="32" y="638">1. Input / cámara</text>
+    <text class="box-line" x="32" y="658">walk / órbita</text>
+    <text class="box-line" x="32" y="674">controls.update</text>
+
+    <line x1="158" y1="652" x2="168" y2="652" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="170" y="616" width="138" height="72" rx="6" fill="#E4E4E41E" stroke="#DD7F76" stroke-width="1.5"/>
+    <text class="box-title" x="182" y="638">2. Sensores</text>
+    <text class="box-line" x="182" y="658">IMU → pose</text>
+    <text class="box-line" x="182" y="674">lidar → zoom</text>
+
+    <line x1="308" y1="652" x2="318" y2="652" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="320" y="616" width="138" height="72" rx="6" fill="#E4E4E41E" stroke="#DD7F76" stroke-width="1.5"/>
+    <text class="box-title" x="332" y="638">3. Escena 3D</text>
+    <text class="box-line" x="332" y="658">terreno · texto</text>
+    <text class="box-line" x="332" y="674">océano · intro</text>
+
+    <line x1="458" y1="652" x2="468" y2="652" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="470" y="616" width="138" height="72" rx="6" fill="#E4E4E41E" stroke="#DD7F76" stroke-width="1.5"/>
+    <text class="box-title" x="482" y="638">4. Audio</text>
+    <text class="box-line" x="482" y="658">posición oyente</text>
+    <text class="box-line" x="482" y="674">buses Howler</text>
+
+    <line x1="608" y1="652" x2="618" y2="652" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="620" y="616" width="138" height="72" rx="6" fill="#E4E4E41E" stroke="#7BAFE9" stroke-width="1.5"/>
+    <text class="box-title" x="632" y="638">5. Render</text>
+    <text class="box-line" x="632" y="658">WebGL / stereo</text>
+    <text class="box-line" x="632" y="674">postproceso</text>
+
+    <line x1="758" y1="652" x2="768" y2="652" stroke="#E4E4E45E" stroke-width="1.25" marker-end="url(#arrow)"/>
+
+    <rect x="770" y="616" width="170" height="72" rx="6" fill="#E4E4E41E" stroke="#9386F2" stroke-width="1.5"/>
+    <text class="box-title" x="782" y="638">6. Overlays</text>
+    <text class="box-line" x="782" y="658">grain · dither</text>
+    <text class="box-line" x="782" y="674">ciclo SVG</text>
+  </g>
+
+  <path d="M 855 702 L 855 722 L 89 722 L 89 702" fill="none" stroke="#599CE7" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#arrowAccent)"/>
+  <text class="loop-label" x="400" y="744">siguiente frame (rAF)</text>
+
+  <text class="note" x="20" y="780">Cada tick: actualizar (input, sensores, capas 3D, audio) → dibujar (WebGL / stereo / postproceso) → overlays 2D.</text>
+  <text class="subtitle" x="20" y="802">Topografías de la intemperie · docs/arquitectura-dark.svg</text>
+</svg>

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { triangleLfo } from "../front/lfo.js";
+import { triangleLfo } from "../math/lfo.js";
 import { createPerlin3D, sampleFbm3 } from "../math/perlin.js";
 
 const _point = new THREE.Vector3();

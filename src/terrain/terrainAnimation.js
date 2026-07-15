@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { ANIMATION_INTRO } from "../config.js";
-import { sineLfo } from "../front/lfo.js";
+import { sineLfo } from "../math/lfo.js";
 import { animationParams } from "./animationParams.js";
 import { analyzeTerrainLayers } from "./layerAnalysis.js";
 import { computeLayerSelection, seededRandom } from "./layerSelection.js";

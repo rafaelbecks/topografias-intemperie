@@ -1,7 +1,6 @@
 import { loadStateFromFile, loadStateFromUrl } from "./state.js";
 
 export const FRONT_SCENE = "front.json";
-export const DEFAULT_SCENE = FRONT_SCENE;
 export const SCENES_BASE = "./scenes/";
 
 /** Number keys 1…N switch to these poem scenes (front is the default entry). */
@@ -13,8 +12,6 @@ export const SCENE_ORDER = [
   "ventanas.json",
 ];
 
-export const ALL_SCENES = [FRONT_SCENE, ...SCENE_ORDER];
-
 export function sceneUrl(name) {
   return `${SCENES_BASE}${name}`;
 }
@@ -23,9 +20,6 @@ export async function loadSceneByName(name, ctx) {
   return loadStateFromUrl(sceneUrl(name), ctx);
 }
 
-export async function loadDefaultScene(ctx) {
-  return loadSceneByName(DEFAULT_SCENE, ctx);
-}
 
 export function getInitialSceneName() {
   const param = new URLSearchParams(window.location.search).get("scene");

@@ -1,7 +1,5 @@
 import { EXR_ENVIRONMENTS } from "./exrEnvironments.generated.js";
 
-export { EXR_ENVIRONMENTS };
-
 /** Change these to switch the environment loaded on startup. */
 export const DEFAULT_ENV_FORMAT = "hdr";
 export const DEFAULT_ENV = "industrial_sunset";
