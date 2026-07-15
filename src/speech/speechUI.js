@@ -17,6 +17,51 @@ const LANG_OPTIONS = {
 
 const DEFAULT_DEVICE_OPTION = { Default: "" };
 
+function createActivityLed(folder) {
+  const row = document.createElement("div");
+  row.className = "audio-input-activity";
+  row.innerHTML = `
+    <span class="audio-input-activity__label">activity</span>
+    <span class="audio-input-activity__value">
+      <span class="audio-input-activity__led" aria-hidden="true"></span>
+    </span>
+  `;
+
+  const container = () => folder.element.querySelector(".tp-fldv_c") ?? folder.element;
+  const led = row.querySelector(".audio-input-activity__led");
+
+  return {
+    /** Keep the LED row directly under a Tweakpane binding (device picker). */
+    mountAfter(binding) {
+      const parent = container();
+      const anchor = binding?.element;
+      if (anchor?.parentElement === parent) {
+        anchor.after(row);
+      } else {
+        parent.appendChild(row);
+      }
+    },
+    setLevel(level) {
+      const clamped = Math.max(0, Math.min(1, level));
+      // Square curve so quiet noise stays dim; speech lights it clearly.
+      const brightness = clamped * clamped;
+      led.style.setProperty("--activity", brightness.toFixed(3));
+      led.classList.toggle("is-live", brightness > 0.02);
+      led.classList.toggle("is-hot", brightness > 0.35);
+    },
+    setActive(active) {
+      row.classList.toggle("is-active", active);
+      if (!active) {
+        led.style.setProperty("--activity", "0");
+        led.classList.remove("is-live", "is-hot");
+      }
+    },
+    dispose() {
+      row.remove();
+    },
+  };
+}
+
 export function setupSpeechUI(
   page,
   {
@@ -37,10 +82,12 @@ export function setupSpeechUI(
 
   const state = {
     supported: false,
+    trackInput: false,
     listening: false,
     status: "idle",
     lang: "es-ES",
     error: "",
+    activeTrack: "—",
   };
 
   const deviceOptions = { ...DEFAULT_DEVICE_OPTION };
@@ -85,12 +132,46 @@ export function setupSpeechUI(
   });
 
   state.supported = recognition.supported;
+  state.trackInput = recognition.trackInputSupported;
 
   folder.addBinding(state, "supported", { label: "supported", readonly: true });
+  folder.addBinding(state, "trackInput", {
+    label: "track → ASR",
+    readonly: true,
+  });
   folder.addBinding(state, "status", { label: "status", readonly: true });
 
   const inputFolder = folder.addFolder({ title: "Input", expanded: true });
   let deviceBinding = null;
+  let activityLed = null;
+  let activityRaf = 0;
+
+  function syncActiveTrackLabel() {
+    const label = audioInput.getActiveTrackLabel();
+    state.activeTrack = label || "—";
+  }
+
+  function stopActivityLoop() {
+    if (activityRaf) {
+      cancelAnimationFrame(activityRaf);
+      activityRaf = 0;
+    }
+    activityLed?.setLevel(0);
+    activityLed?.setActive(false);
+  }
+
+  function startActivityLoop() {
+    stopActivityLoop();
+    activityLed?.setActive(true);
+    syncActiveTrackLabel();
+    refresh?.();
+
+    const tick = () => {
+      activityLed?.setLevel(audioInput.getLevel());
+      activityRaf = requestAnimationFrame(tick);
+    };
+    activityRaf = requestAnimationFrame(tick);
+  }
 
   function rebuildDeviceBinding() {
     deviceBinding?.dispose();
@@ -103,6 +184,13 @@ export function setupSpeechUI(
         speechParams.inputDeviceId = e.value;
         onInputDeviceChange();
       });
+
+    // addBinding always appends; keep the picker at the top of the folder.
+    const parent = inputFolder.element.querySelector(".tp-fldv_c");
+    if (parent && deviceBinding.element) {
+      parent.prepend(deviceBinding.element);
+    }
+    activityLed?.mountAfter(deviceBinding);
   }
 
   async function refreshInputDevices() {
@@ -131,16 +219,40 @@ export function setupSpeechUI(
     }
   }
 
+  function getInputAudioTrack() {
+    return audioInput.getStream()?.getAudioTracks()?.[0] ?? null;
+  }
+
+  async function openInputMonitor() {
+    await audioInput.acquire(speechParams.inputDeviceId || undefined);
+    syncActiveTrackLabel();
+    startActivityLoop();
+  }
+
+  function closeInputMonitor() {
+    stopActivityLoop();
+    audioInput.release();
+    state.activeTrack = "—";
+  }
+
+  async function startRecognitionOnCurrentTrack() {
+    recognition.setLang(state.lang);
+    await recognition.start(getInputAudioTrack());
+  }
+
   async function onInputDeviceChange() {
-    if (!state.listening) return;
+    // Swap the managed MediaStream, then restart ASR on the new track when possible.
+    const wasListening = state.listening;
 
     try {
-      recognition.stop();
-      await audioInput.acquire(speechParams.inputDeviceId || undefined);
-      recognition.setLang(state.lang);
-      await recognition.start();
+      if (wasListening) recognition.stop();
+      await openInputMonitor();
+      if (wasListening) {
+        await startRecognitionOnCurrentTrack();
+      }
+      refresh?.();
     } catch (err) {
-      audioInput.release();
+      closeInputMonitor();
       state.error = err.message;
       refresh?.();
       console.error(err);
@@ -150,13 +262,12 @@ export function setupSpeechUI(
   async function startListening() {
     try {
       if (inputSupported) {
-        await audioInput.acquire(speechParams.inputDeviceId || undefined);
+        await openInputMonitor();
         await refreshInputDevices();
       }
-      recognition.setLang(state.lang);
-      await recognition.start();
+      await startRecognitionOnCurrentTrack();
     } catch (err) {
-      audioInput.release();
+      closeInputMonitor();
       state.error = err.message;
       refresh?.();
       console.error(err);
@@ -165,16 +276,34 @@ export function setupSpeechUI(
 
   function stopListening() {
     recognition.stop();
-    audioInput.release();
+    closeInputMonitor();
+    refresh?.();
   }
 
   if (inputSupported) {
-    refreshInputDevices().catch(console.error);
+    activityLed = createActivityLed(inputFolder);
+    rebuildDeviceBinding();
+
+    inputFolder.addBinding(state, "activeTrack", {
+      label: "active track",
+      readonly: true,
+    });
 
     inputFolder.addButton({ title: "Refresh devices" }).on("click", () => {
       refreshInputDevices().catch(console.error);
     });
 
+    // Open the selected mic for level metering without starting recognition.
+    inputFolder.addButton({ title: "Preview input" }).on("click", () => {
+      openInputMonitor().catch((err) => {
+        closeInputMonitor();
+        state.error = err.message;
+        refresh?.();
+        console.error(err);
+      });
+    });
+
+    refreshInputDevices().catch(console.error);
     navigator.mediaDevices.addEventListener("devicechange", refreshInputDevices);
   } else {
     inputFolder.addBlade({
@@ -227,6 +356,13 @@ export function setupSpeechUI(
       value: "SpeechRecognition is not available. Try Chrome, Edge, or Safari.",
       parse: (v) => String(v),
     });
+  } else if (!recognition.trackInputSupported) {
+    folder.addBlade({
+      view: "text",
+      label: "note",
+      value: "This browser cannot bind ASR to a chosen mic (needs Chromium 133+). Recognition uses the system default.",
+      parse: (v) => String(v),
+    });
   }
 
   return {
@@ -234,8 +370,10 @@ export function setupSpeechUI(
       if (inputSupported) {
         navigator.mediaDevices.removeEventListener("devicechange", refreshInputDevices);
       }
+      stopActivityLoop();
+      activityLed?.dispose();
       deviceBinding?.dispose();
-      audioInput.release();
+      audioInput.destroy();
       recognition.destroy();
       subtitles.destroy();
     },

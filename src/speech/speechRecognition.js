@@ -3,14 +3,25 @@ const SpeechRecognitionCtor =
     ? window.SpeechRecognition || window.webkitSpeechRecognition
     : null;
 
+/** Chromium 133+ ships SpeechRecognition.start(MediaStreamTrack). */
+function supportsTrackInput() {
+  if (!SpeechRecognitionCtor) return false;
+  const match = navigator.userAgent.match(/(?:Chrome|Chromium|Edg)\/(\d+)/);
+  if (!match) return false;
+  return Number(match[1]) >= 133;
+}
+
 /**
  * Thin wrapper around the Web Speech API for continuous recognition with interim results.
- * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
+ * Passes a MediaStreamTrack into start() when the browser supports it so recognition
+ * follows the selected input device instead of only the system default mic.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/start
  */
 export function createSpeechRecognition(options = {}) {
   if (!SpeechRecognitionCtor) {
     return {
       supported: false,
+      trackInputSupported: false,
       start() {
         return Promise.reject(new Error("Speech recognition is not supported in this browser"));
       },
@@ -24,8 +35,11 @@ export function createSpeechRecognition(options = {}) {
   recognition.interimResults = true;
   recognition.lang = options.lang ?? "es-ES";
 
+  const trackInputSupported = supportsTrackInput();
   let listening = false;
   let shouldRestart = false;
+  /** @type {MediaStreamTrack | null} */
+  let audioTrack = null;
 
   const callbacks = {
     onResult: options.onResult ?? (() => {}),
@@ -35,6 +49,16 @@ export function createSpeechRecognition(options = {}) {
 
   function emitStatus(status, detail) {
     callbacks.onStatus({ listening, status, detail });
+  }
+
+  function beginRecognition() {
+    if (audioTrack && audioTrack.readyState === "live") {
+      // Prefer the selected getUserMedia track when the browser understands it.
+      // Older engines ignore the extra argument and keep using the default mic.
+      recognition.start(audioTrack);
+      return;
+    }
+    recognition.start();
   }
 
   recognition.onresult = (event) => {
@@ -75,7 +99,7 @@ export function createSpeechRecognition(options = {}) {
     listening = false;
     if (shouldRestart) {
       try {
-        recognition.start();
+        beginRecognition();
         listening = true;
         emitStatus("listening");
       } catch {
@@ -93,14 +117,21 @@ export function createSpeechRecognition(options = {}) {
 
   return {
     supported: true,
+    trackInputSupported,
 
     setLang(lang) {
       recognition.lang = lang;
     },
 
-    start() {
+    /**
+     * @param {MediaStreamTrack | null | undefined} track
+     *   Optional audio track from getUserMedia. Used when the browser supports
+     *   SpeechRecognition.start(MediaStreamTrack).
+     */
+    start(track) {
       if (listening) return Promise.resolve();
       shouldRestart = true;
+      audioTrack = track?.kind === "audio" ? track : null;
 
       return new Promise((resolve, reject) => {
         const onStart = () => {
@@ -119,7 +150,7 @@ export function createSpeechRecognition(options = {}) {
         recognition.addEventListener("error", onError);
 
         try {
-          recognition.start();
+          beginRecognition();
         } catch (err) {
           recognition.removeEventListener("start", onStart);
           recognition.removeEventListener("error", onError);
@@ -132,6 +163,7 @@ export function createSpeechRecognition(options = {}) {
     stop() {
       shouldRestart = false;
       listening = false;
+      audioTrack = null;
       recognition.stop();
       emitStatus("idle");
     },
@@ -139,6 +171,7 @@ export function createSpeechRecognition(options = {}) {
     destroy() {
       shouldRestart = false;
       listening = false;
+      audioTrack = null;
       recognition.onresult = null;
       recognition.onerror = null;
       recognition.onend = null;

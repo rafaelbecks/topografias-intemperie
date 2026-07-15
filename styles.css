@@ -268,6 +268,69 @@ canvas {
   background-color: transparent !important;
 }
 
+.audio-input-activity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  min-height: 24px;
+  box-sizing: border-box;
+  color: var(--tp-label-foreground-color);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.audio-input-activity__label {
+  flex: 1;
+  opacity: 0.9;
+}
+
+.audio-input-activity__value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 80px;
+}
+
+.audio-input-activity__led {
+  --activity: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    hsl(145, 70%, calc(28% + var(--activity) * 42%)),
+    hsl(145, 80%, calc(12% + var(--activity) * 28%))
+  );
+  box-shadow:
+    0 0 calc(2px + var(--activity) * 10px) hsla(145, 90%, 45%, calc(var(--activity) * 0.95)),
+    inset 0 0 2px rgba(255, 255, 255, 0.15);
+  opacity: calc(0.25 + var(--activity) * 0.75);
+  transition: opacity 40ms linear, box-shadow 40ms linear;
+}
+
+.audio-input-activity__led.is-live {
+  background: radial-gradient(
+    circle at 35% 30%,
+    hsl(145, 85%, calc(40% + var(--activity) * 35%)),
+    hsl(145, 90%, calc(18% + var(--activity) * 30%))
+  );
+}
+
+.audio-input-activity__led.is-hot {
+  background: radial-gradient(
+    circle at 35% 30%,
+    hsl(72, 90%, 70%),
+    hsl(145, 95%, 40%)
+  );
+}
+
+.audio-input-activity:not(.is-active) .audio-input-activity__led {
+  opacity: 0.2;
+  box-shadow: none;
+}
+
 /* Mobile Tweakpane styles */
 @media (max-width: 768px) {
   #side-panel {
