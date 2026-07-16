@@ -20,6 +20,8 @@ Este repositorio concentra las herramientas para armar esas escenas: extrusión 
 
 ### Arquitectura
 
+El sistema arma y navega “memorias espaciales”: escenas 3D compuestass a partir de modelos GLB, entornos EXR, agua procedural, texto, audio espacial y efectos. Las escenas son editables via tweakpane y navegables via teclado/ratón o a través de sensores (con comunicación vía websocket usando el software [ardeidae](https://github.com/rafaelbecks/ardeidae)).
+
 <img src="docs/arquitectura-dark.svg" alt="Arquitectura general — Topografías de la intemperie" width="100%" />
 
 Detalle: **[docs/arquitectura.md](docs/arquitectura.md)**.
