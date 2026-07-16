@@ -103,7 +103,7 @@
     "noiseAmplitude": 0.35,
     "noiseScale": 1.2,
     "noiseSeed": 42,
-    "envelopeRadius": 2.7,
+    "envelopeRadius": 8,
     "torusTube": 0.36999999999999994,
     "torusKnotRadius": 1.05,
     "torusKnotTube": 0.19,
