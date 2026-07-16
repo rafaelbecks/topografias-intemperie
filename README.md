@@ -18,6 +18,12 @@ Este repositorio concentra las herramientas para armar esas escenas: extrusión 
   </tr>
 </table>
 
+### Arquitectura
+
+<img src="docs/arquitectura-dark.svg" alt="Arquitectura general — Topografías de la intemperie" width="100%" />
+
+Detalle: **[docs/arquitectura.md](docs/arquitectura.md)**.
+
 ### Visor 3D
 
 Visor Three.js que **arma y navega escenas** a partir de modelos GLB, mapas de entorno, agua, texto, audio espacial y efectos (grain, dither). El panel lateral (Tweakpane) organiza la composición en pestañas **Scene / Animation / Text / Audio**, con estados exportables a JSON.
@@ -27,7 +33,7 @@ npm install
 npm run start
 ```
 
-Guía del panel, pestañas y navegación: **[docs/visor.md](docs/visor.md)**. Arquitectura: ** [diagrama](docs/arquitectura-dark.svg).
+Guía del panel, pestañas y navegación: **[docs/visor.md](docs/visor.md)**.
 
 ### Audio
 
