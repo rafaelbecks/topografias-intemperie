@@ -39,7 +39,7 @@ Guía del panel, pestañas y navegación: **[docs/visor.md](docs/visor.md)**.
 
 Mezcla Howler de dos buses: **entorno** (HTML5, loop, no espacial) y **objeto** (Web Audio + HRTF anclado a la raíz del GLB; la cámara es el oyente). Parámetros en la pestaña Audio / JSON de escena (`envVolume`, `objectVolume`, `sensitivity`).
 
-Diagrama: [docs/audio-arquitectura-dark.svg](docs/audio-arquitectura-dark.svg)
+<img src="docs/audio-arquitectura-dark.svg" alt="Arquitectura de audio — Howler.js" width="100%" />
 
 ### Script para Blender (`extrude_curves.py`)
 
