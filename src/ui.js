@@ -172,9 +172,7 @@ export function createUI(ctx) {
 
     if (!ditherParams.enabled || !ditherParams.cycleEnabled) {
       ctx.ditherCycle?.activate();
-      activateOrderedDitherVoice();
       ctx.ditherOverlay?.sync();
-      ctx.postProcessing?.sync();
       refresh();
     }
 
@@ -182,9 +180,7 @@ export function createUI(ctx) {
       delirioDitherTimer = null;
       if (!ditherParams.enabled) return;
       ctx.ditherCycle?.deactivate();
-      deactivateOrderedDitherVoice();
       ctx.ditherOverlay?.sync();
-      ctx.postProcessing?.sync();
       refresh();
     }, speechParams.delirioDitherDurationMs);
   }

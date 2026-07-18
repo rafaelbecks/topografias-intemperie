@@ -22,11 +22,11 @@ const COMMAND_GROUPS = [
   },
   {
     id: "particles",
-    words: ["fragmento", "sedimento"],
+    words: ["fragmento", "sedimento", "hambre", "verdor"],
   },
   {
     id: "ditherDelirio",
-    words: ["delirio"],
+    words: ["delirio", "muerto"],
   },
   {
     id: "dither",
@@ -34,15 +34,15 @@ const COMMAND_GROUPS = [
   },
   {
     id: "oceanManglar",
-    words: ["manglar"],
+    words: ["manglar", "corales", "coral"],
   },
   {
     id: "oceanCienaga",
-    words: ["cienaga"],
+    words: ["cienaga", "huerto"],
   },
   {
     id: "oceanHumedal",
-    words: ["humedal"],
+    words: ["humedal", "delgada"],
   },
   {
     id: "oceanCueva",

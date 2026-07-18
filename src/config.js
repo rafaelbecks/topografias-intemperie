@@ -111,5 +111,6 @@ export const MODEL_OPTIONS = [
   { text: "Coso sin fisura 1", value: "cosos/cosos-sin-fisura1" },
   { text: "Coso sin fisura 2", value: "cosos/cosos-sin-fisura2" },
   { text: "Engrinchado", value: "cosos/engrinchado" },
+  { text: "Pututu", value: "pututu" },
 
 ];
