@@ -49,6 +49,7 @@ const PARAM_KEYS = [
   "rotateSpeed",
   "debug",
   "wireframe",
+  "hideModel",
   "model",
 ];
 

@@ -17,6 +17,23 @@ const MODEL_BINDING_OPTIONS = Object.fromEntries([
   ...MODEL_OPTIONS.map(({ text, value }) => [text, value]),
 ]);
 
+const DEFAULT_CAMERA_OPTION = { "System default": "" };
+const cameraSupported = Boolean(
+  navigator.mediaDevices?.getUserMedia && navigator.mediaDevices?.enumerateDevices
+);
+
+async function listVideoInputDevices() {
+  if (!navigator.mediaDevices?.enumerateDevices) return [];
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter((device) => device.kind === "videoinput");
+}
+
+function formatCameraLabel(device, index) {
+  const name = device.label?.trim();
+  if (name) return name;
+  return `Camera ${index + 1}`;
+}
+
 /**
  * Scene tab controls grouped into Tweakpane folders.
  * @returns {{ setupEnvironmentControl, refreshModelBlade }}
@@ -25,6 +42,9 @@ export function setupSceneTabUI(page, ctx) {
   const {
     loadModel,
     loadEnvironment,
+    startWebcamEnvironment,
+    stopWebcamEnvironment,
+    setWebcamAsBackground,
     scene,
     renderer,
     light,
@@ -37,11 +57,79 @@ export function setupSceneTabUI(page, ctx) {
 
   let modelBinding;
   let envBinding;
+  let webcamEnvBinding;
+  let cameraDeviceBinding;
   let lastEnvFormat = params.envFormat;
+
+  const cameraOptions = { ...DEFAULT_CAMERA_OPTION };
+  const cameraPicker = { webcamDeviceId: params.webcamDeviceId };
 
   function reloadEnvironment() {
     const path = getEnvPath(params.environment, params.envFormat);
     if (path) loadEnvironment(path, params.envFormat);
+    webcamEnvBinding?.refresh();
+  }
+
+  async function enableWebcamEnv() {
+    try {
+      await startWebcamEnvironment();
+      cameraPicker.webcamDeviceId = params.webcamDeviceId;
+      await refreshCameraDevices();
+    } catch (err) {
+      console.error(err);
+      params.webcamEnv = false;
+      webcamEnvBinding?.refresh();
+      alert(`Webcam environment failed: ${err.message}`);
+    }
+  }
+
+  function rebuildCameraDeviceBinding() {
+    if (!cameraSupported) return;
+    cameraDeviceBinding?.dispose();
+    cameraDeviceBinding = envFolder
+      .addBinding(cameraPicker, "webcamDeviceId", {
+        label: "webcam device",
+        options: cameraOptions,
+      })
+      .on("change", async (e) => {
+        params.webcamDeviceId = e.value;
+        if (!params.webcamEnv) return;
+        await enableWebcamEnv();
+      });
+
+    // Keep the device picker next to the webcam toggles.
+    const parent = envFolder.element.querySelector(".tp-fldv_c");
+    if (parent && cameraDeviceBinding.element && webcamEnvBinding?.element) {
+      parent.insertBefore(cameraDeviceBinding.element, webcamEnvBinding.element.nextSibling);
+    }
+  }
+
+  async function refreshCameraDevices() {
+    if (!cameraSupported) return;
+
+    try {
+      const devices = await listVideoInputDevices();
+      for (const key of Object.keys(cameraOptions)) {
+        delete cameraOptions[key];
+      }
+      Object.assign(cameraOptions, DEFAULT_CAMERA_OPTION);
+
+      for (const [index, device] of devices.entries()) {
+        if (!device.deviceId) continue;
+        cameraOptions[formatCameraLabel(device, index)] = device.deviceId;
+      }
+
+      if (!Object.values(cameraOptions).includes(cameraPicker.webcamDeviceId)) {
+        cameraPicker.webcamDeviceId = "";
+        params.webcamDeviceId = "";
+      } else {
+        cameraPicker.webcamDeviceId = params.webcamDeviceId;
+      }
+
+      rebuildCameraDeviceBinding();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   function setupEnvironmentControl() {
@@ -69,6 +157,10 @@ export function setupSceneTabUI(page, ctx) {
     .on("change", (e) => {
       loadModel(e.value);
     });
+
+  modelFolder.addBinding(params, "hideModel", { label: "hide model" }).on("change", (e) => {
+    modelLoader.setHidden(e.value);
+  });
 
   modelFolder.addBinding(params, "roughness", { min: 0, max: 1 }).on("change", (e) => {
     modelLoader.setRoughness(e.value);
@@ -128,6 +220,31 @@ export function setupSceneTabUI(page, ctx) {
       scene.backgroundBlurriness = e.value;
     }
   );
+
+  webcamEnvBinding = envFolder
+    .addBinding(params, "webcamEnv", { label: "webcam env" })
+    .on("change", async (e) => {
+      if (e.value) {
+        await enableWebcamEnv();
+        return;
+      }
+      stopWebcamEnvironment({ resetParam: true });
+      reloadEnvironment();
+    });
+
+  if (cameraSupported) {
+    rebuildCameraDeviceBinding();
+    refreshCameraDevices().catch(console.error);
+    navigator.mediaDevices.addEventListener("devicechange", () => {
+      refreshCameraDevices().catch(console.error);
+    });
+  }
+
+  envFolder
+    .addBinding(params, "webcamAsBackground", { label: "webcam as bg" })
+    .on("change", (e) => {
+      setWebcamAsBackground(e.value);
+    });
 
   // — Lighting (fallback when no env map) —
   const lightingFolder = page.addFolder({ title: "Lighting", expanded: false });

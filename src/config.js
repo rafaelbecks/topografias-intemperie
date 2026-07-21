@@ -59,12 +59,19 @@ export const params = {
   envFormat: DEFAULT_ENV_FORMAT,
   environment: DEFAULT_ENV,
   bgBlur: 0,
+  /** Live webcam as IBL source (session-only; not saved in scene JSON). */
+  webcamEnv: false,
+  /** When webcam env is on, also drive scene.background from the same bake. */
+  webcamAsBackground: false,
+  /** Empty string = system default camera. Session-only. */
+  webcamDeviceId: "",
   moveSpeed: 5,
   fpMove: true,
   autoRotate: false,
   rotateSpeed: 0.6,
   debug: false,
   wireframe: false,
+  hideModel: false,
   model: "cart2",
 };
 
@@ -112,5 +119,6 @@ export const MODEL_OPTIONS = [
   { text: "Coso sin fisura 2", value: "cosos/cosos-sin-fisura2" },
   { text: "Engrinchado", value: "cosos/engrinchado" },
   { text: "Pututu", value: "pututu" },
+  { text: "Winclado", value: "wincler"}
 
 ];

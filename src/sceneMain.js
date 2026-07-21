@@ -40,6 +40,10 @@ export async function bootSceneViewer(sceneName) {
     ambient,
     loadEnvironment,
     clearEnvironment,
+    startWebcamEnvironment,
+    stopWebcamEnvironment,
+    setWebcamAsBackground,
+    updateWebcamEnvironment,
     setViewportSize,
   } = sceneSystem;
 
@@ -103,6 +107,9 @@ export async function bootSceneViewer(sceneName) {
     loadModel: modelLoader.loadModel,
     loadEnvironment,
     clearEnvironment,
+    startWebcamEnvironment,
+    stopWebcamEnvironment,
+    setWebcamAsBackground,
     scene,
     camera,
     renderer,
@@ -149,6 +156,7 @@ export async function bootSceneViewer(sceneName) {
     controls.update();
     audioSystem.update();
     oceanSystem.update(delta);
+    updateWebcamEnvironment(performance.now());
     stereoEffects.render(scene, camera);
     hasRendered = true;
     ditherOverlay.update();

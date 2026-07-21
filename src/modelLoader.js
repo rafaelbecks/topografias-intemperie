@@ -135,6 +135,7 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
           });
 
           applyWireframe(model, params.wireframe);
+          model.visible = !params.hideModel;
           onModelLoaded?.(model);
           const framedY = frameCamera(size);
           if (!skipIntro) startIntroAnimation(framedY);
@@ -183,6 +184,11 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
     applyWireframe(currentModel, enabled);
   }
 
+  function setHidden(hidden) {
+    params.hideModel = hidden;
+    if (currentModel) currentModel.visible = !hidden;
+  }
+
   function setRoughness(value) {
     if (!currentModel) return;
     currentModel.traverse((o) => {
@@ -207,6 +213,7 @@ export function createModelLoader({ scene, camera, controls, onModelLoaded, load
     updateIntro,
     cancelIntro,
     setWireframe,
+    setHidden,
     setRoughness,
     getCurrentModel: () => currentModel,
     getModelBounds,
